@@ -1,8 +1,12 @@
 <p align="center">
-  <h1 align="center">App Store Connect MCP Server</h1>
+  <img src="docs/banner.png" alt="nomly-asc-mcp banner" width="100%"/>
+</p>
+
+<p align="center">
+  <h1 align="center">nomly-asc-mcp</h1>
   <p align="center">
-    A Model Context Protocol server for the App Store Connect API.<br/>
-    Manage apps, builds, TestFlight, reviews, and more — directly from Claude.
+    App Store Connect MCP Server — 293 tools, 33 workers, Individual API Key support.<br/>
+    Manage apps, builds, TestFlight, reviews, subscriptions, and more — directly from Claude or any AI agent.
   </p>
 </p>
 
@@ -11,7 +15,7 @@
   <a href="https://developer.apple.com/macos/"><img src="https://img.shields.io/badge/macOS-14.0+-000000.svg?style=flat&logo=apple&logoColor=white" alt="macOS 14.0+"></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-compatible-4A90D9.svg?style=flat" alt="MCP Compatible"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat" alt="MIT License"></a>
-  <a href="https://github.com/zelentsov-dev/asc-mcp/actions"><img src="https://github.com/zelentsov-dev/asc-mcp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/dsm5e/nomly-asc-mcp/actions"><img src="https://github.com/dsm5e/nomly-asc-mcp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
 <p align="center">
@@ -29,7 +33,13 @@
 
 ## Overview
 
-**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **293 tools** across 33 workers, enabling you to automate your entire iOS/macOS release workflow through natural language.
+**nomly-asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **296 tools** across 33 workers, enabling you to automate your entire iOS/macOS release workflow through natural language.
+
+This is a maintained fork of [zelentsov-dev/asc-mcp](https://github.com/zelentsov-dev/asc-mcp) with additional fixes and features:
+- **Individual API Key support** — omit `issuer_id` to use personal keys (JWT `sub: "user"`)
+- **Fixed age rating tool** — `app_versions_update_age_rating` now works correctly via the `appInfos` endpoint
+- **Subscription pricing workflow** — `subscriptions_set_price`, `subscriptions_set_availability`, `intro_offers_set_all_territories`
+- **Release binaries** — pre-built `darwin-arm64` / `darwin-x86_64` binaries on every GitHub release
 
 ### Key capabilities
 
@@ -50,7 +60,7 @@
 ```bash
 # 1. Install via Mint
 brew install mint
-mint install zelentsov-dev/asc-mcp@1.4.0
+mint install dsm5e/nomly-asc-mcp@2.1.0
 
 # 2. Add to Claude Code with env vars (simplest setup)
 claude mcp add asc-mcp \
@@ -82,7 +92,7 @@ Or use a JSON config file — see [Configuration](#configuration) below.
 brew install mint
 
 # Install asc-mcp from GitHub
-mint install zelentsov-dev/asc-mcp@1.4.0
+mint install dsm5e/nomly-asc-mcp@2.1.0
 
 # Register in Claude Code
 claude mcp add asc-mcp -- ~/.mint/bin/asc-mcp
@@ -91,21 +101,21 @@ claude mcp add asc-mcp -- ~/.mint/bin/asc-mcp
 To install a specific branch or tag:
 
 ```bash
-mint install zelentsov-dev/asc-mcp@main      # main branch
-mint install zelentsov-dev/asc-mcp@develop    # develop branch
-mint install zelentsov-dev/asc-mcp@1.4.0      # specific tag
+mint install dsm5e/nomly-asc-mcp@main      # main branch
+mint install dsm5e/nomly-asc-mcp@develop    # develop branch
+mint install dsm5e/nomly-asc-mcp@2.1.0      # specific tag
 ```
 
 To update to the latest version:
 
 ```bash
-mint install zelentsov-dev/asc-mcp@1.4.0 --force
+mint install dsm5e/nomly-asc-mcp@2.1.0 --force
 ```
 
 ### Option B: Build from Source
 
 ```bash
-git clone https://github.com/zelentsov-dev/asc-mcp.git
+git clone https://github.com/dsm5e/nomly-asc-mcp.git
 cd asc-mcp
 swift build -c release
 
@@ -204,6 +214,54 @@ The server resolves configuration in this order:
 5. `ASC_COMPANY_1_KEY_ID` ... (multi-company env vars)
 6. `ASC_KEY_ID` + `ASC_ISSUER_ID` (single-company env vars)
 
+### Individual API Keys
+
+App Store Connect supports two types of API keys:
+
+- **Team Keys** — created under *Users and Access → Integrations → Team Keys* (requires Admin role). Access scoped to the team with the key's assigned role.
+- **Individual Keys** — created under *user profile → Individual API Key* (available to any team member). Access scoped to the user's own role.
+
+Individual Keys use a different JWT payload per [Apple's specification](https://developer.apple.com/documentation/appstoreconnectapi/generating-tokens-for-api-requests): they send `sub: "user"` instead of `iss: <issuerID>`. This server handles the difference transparently — just omit the issuer ID in your configuration.
+
+#### Configure via environment variables
+
+```bash
+# Single Individual Key (no ASC_ISSUER_ID)
+export ASC_KEY_ID=ABC123DEF4
+export ASC_PRIVATE_KEY_PATH=/path/to/AuthKey_ABC123DEF4.p8
+
+# Multi-company: Team + Individual
+export ASC_COMPANY_1_KEY_ID=TEAM_KEY_ID
+export ASC_COMPANY_1_ISSUER_ID=57246542-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+export ASC_COMPANY_1_KEY_PATH=/path/to/TeamKey.p8
+
+export ASC_COMPANY_2_KEY_ID=INDIVIDUAL_KEY_ID
+# No ASC_COMPANY_2_ISSUER_ID → treated as Individual Key
+export ASC_COMPANY_2_KEY_PATH=/path/to/IndividualKey.p8
+```
+
+#### Configure via `companies.json`
+
+Simply omit the `issuer_id` field:
+
+```json
+{
+  "id": "my-individual",
+  "name": "My Personal Account",
+  "key_id": "ABC123DEF4",
+  "key_path": "/path/to/AuthKey_ABC123DEF4.p8"
+}
+```
+
+#### Limitations of Individual Keys
+
+Per Apple's documentation, Individual Keys **cannot** access:
+
+- Provisioning endpoints (Bundle IDs, Certificates, Profiles, Devices) → `provisioning_*` tools
+- Sales and Finance reports → `analytics_*` tools that fetch sales/finance data
+- `notaryTool` endpoints
+
+Calls to these endpoints with an Individual Key will fail with HTTP 403 from Apple. Use a Team Key for workflows that require them. This server does not pre-validate — errors surface from the App Store Connect API directly.
 ### 3. MCP Host Configuration
 
 <details>
@@ -1012,6 +1070,8 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Acknowledgments
 
+- [zelentsov-dev/asc-mcp](https://github.com/zelentsov-dev/asc-mcp) — the original project by [Aleksei Zelentsov](https://github.com/zelentsov-dev) that this fork is based on. Licensed under MIT.
+- [conversun](https://github.com/conversun) — Individual API Key support
 - [Model Context Protocol](https://modelcontextprotocol.io) — the protocol specification and [Swift SDK](https://github.com/modelcontextprotocol/swift-sdk)
 - [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi) — Apple's official REST API
 

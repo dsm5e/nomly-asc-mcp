@@ -28,7 +28,12 @@ public actor WorkerDependencies: Sendable {
 
         print("🔄 Reinitializing workers for company: \(company.name)", to: &standardError)
         print("  Key ID: \(company.keyID)", to: &standardError)
-        print("  Issuer ID: \(company.issuerID)", to: &standardError)
+        if let issuerID = company.issuerID {
+            print("  Key Type: Team Key", to: &standardError)
+            print("  Issuer ID: \(issuerID)", to: &standardError)
+        } else {
+            print("  Key Type: Individual Key", to: &standardError)
+        }
 
         self.jwtService = try JWTService(company: company)
 
@@ -258,9 +263,31 @@ public actor WorkerManager {
                 allTools += await self.getReviewAttachmentsTools()
             }
 
-            return ListTools.Result(tools: allTools)
+            // Annotate tools with maxResultSizeChars for Claude Code
+            let analyticsTools: Set<String> = [
+                "analytics_sales_report", "analytics_financial_report",
+                "analytics_get_report", "analytics_app_summary"
+            ]
+
+            let annotatedTools = allTools.map { tool -> Tool in
+                var modified = tool
+                let maxChars: Int
+                if analyticsTools.contains(tool.name) {
+                    maxChars = 500_000
+                } else if tool.name.contains("_list") || tool.name.contains("_search") {
+                    maxChars = 200_000
+                } else {
+                    maxChars = 100_000
+                }
+                modified._meta = Metadata(additionalFields: [
+                    "anthropic/maxResultSizeChars": .int(maxChars)
+                ])
+                return modified
+            }
+
+            return ListTools.Result(tools: annotatedTools)
         }
-        
+
         // Handler for all tool calls
         await server.withMethodHandler(CallTool.self) { params in
             do {
@@ -442,13 +469,13 @@ public actor WorkerManager {
                 }
 
                 return CallTool.Result(
-                    content: [.text("Error: Unknown tool: \(params.name)")],
+                    content: [.text(text: "Error: Unknown tool: \(params.name)", annotations: nil, _meta: nil)],
                     isError: true
                 )
             } catch {
                 // Catch all errors and return them as Result
                 return CallTool.Result(
-                    content: [.text("Error: \(error.localizedDescription)")],
+                    content: [.text(text: "Error: \(error.localizedDescription)", annotations: nil, _meta: nil)],
                     isError: true
                 )
             }
@@ -498,7 +525,7 @@ public actor WorkerManager {
     /// Returns error result for disabled worker
     private nonisolated func disabledWorkerResult(_ workerName: String) -> CallTool.Result {
         CallTool.Result(
-            content: [.text("Error: Worker '\(workerName)' is disabled. Enable it with --workers \(workerName)")],
+            content: [.text(text: "Error: Worker '\(workerName)' is disabled. Enable it with --workers \(workerName)", annotations: nil, _meta: nil)],
             isError: true
         )
     }
@@ -650,4 +677,3 @@ public actor WorkerManager {
         return await reviewAttachmentsWorker.getTools()
     }
 }
-
