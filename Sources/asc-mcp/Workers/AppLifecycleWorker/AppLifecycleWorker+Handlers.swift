@@ -637,31 +637,32 @@ extension AppLifecycleWorker {
     /// - Returns: JSON with age rating details and action taken (created/updated)
     /// - Throws: CallTool.Result with error if version_id missing or API call fails
     func updateAgeRating(_ params: CallTool.Parameters) async throws -> CallTool.Result {
-        guard let arguments = params.arguments,
-              let versionId = arguments["version_id"]?.stringValue else {
+        guard let arguments = params.arguments else {
             return CallTool.Result(
-                content: [.text("Error: Required parameter 'version_id' is missing")],
+                content: [.text("Error: No arguments provided")],
+                isError: true
+            )
+        }
+
+        // Support both app_info_id (preferred) and legacy version_id
+        let appInfoId = arguments["app_info_id"]?.stringValue
+
+        guard let resolvedAppInfoId = appInfoId else {
+            return CallTool.Result(
+                content: [.text("Error: Required parameter 'app_info_id' is missing. Get it via app_info_list or app_info_get.")],
                 isError: true
             )
         }
 
         do {
-            // First, check if age rating declaration already exists for this version
-            let versionResponse = try await httpClient.get(
-                "/v1/appStoreVersions/\(versionId)",
-                parameters: ["include": "ageRatingDeclaration"],
+            // Fetch age rating declaration via appInfos (correct endpoint since Apple moved it from appStoreVersions)
+            let declarationResponse = try await httpClient.get(
+                "/v1/appInfos/\(resolvedAppInfoId)/ageRatingDeclaration",
+                parameters: [:],
                 as: SingleResourceResponse.self
             )
 
-            var existingAgeRatingId: String? = nil
-
-            // Check if age rating declaration relationship exists
-            if case .object(let relationships) = versionResponse.data.relationships,
-               case .object(let ageRating) = relationships["ageRatingDeclaration"],
-               case .object(let ageRatingData) = ageRating["data"],
-               case .string(let ageRatingId) = ageRatingData["id"] {
-                existingAgeRatingId = ageRatingId
-            }
+            let existingAgeRatingId = declarationResponse.data.id
 
             // Map string enum age rating attributes (NONE/INFREQUENT_OR_MILD/FREQUENT_OR_INTENSE)
             let stringFields: [String: String] = [
@@ -731,40 +732,29 @@ extension AppLifecycleWorker {
                 )
             }
 
-            let response: PassthroughAPIResponse
-            let message: String
-
-            if let ageRatingId = existingAgeRatingId {
-                // Age rating exists - update it with PATCH
-                let request = UpdateAgeRatingDeclarationRequest(
-                    ageRatingId: ageRatingId,
-                    attributes: attributes
-                )
-                response = try await httpClient.patch(
-                    "/v1/ageRatingDeclarations/\(ageRatingId)",
-                    body: request,
-                    as: PassthroughAPIResponse.self
-                )
-                message = "Age rating declaration updated successfully"
-            } else {
-                // Age rating doesn't exist - create new with POST
-                let request = CreateAgeRatingDeclarationRequest(
-                    versionId: versionId,
-                    attributes: attributes
-                )
-                response = try await httpClient.post(
-                    "/v1/ageRatingDeclarations",
-                    body: request,
-                    as: PassthroughAPIResponse.self
-                )
-                message = "Age rating declaration created successfully"
+            // Apple requires parentalControls and ageAssurance in every PATCH
+            if attributes["parentalControls"] == nil {
+                attributes["parentalControls"] = .bool(false)
             }
+            if attributes["ageAssurance"] == nil {
+                attributes["ageAssurance"] = .bool(false)
+            }
+
+            // Age rating declaration always exists on appInfos — just PATCH it
+            let request = UpdateAgeRatingDeclarationRequest(
+                ageRatingId: existingAgeRatingId,
+                attributes: attributes
+            )
+            let response = try await httpClient.patch(
+                "/v1/ageRatingDeclarations/\(existingAgeRatingId)",
+                body: request,
+                as: PassthroughAPIResponse.self
+            )
 
             let result: [String: Any] = [
                 "success": true,
                 "age_rating": response.data.asAny,
-                "message": message,
-                "action": existingAgeRatingId != nil ? "updated" : "created"
+                "message": "Age rating declaration updated successfully"
             ]
 
             return CallTool.Result(content: [.text(JSONFormatter.formatJSON(result))])

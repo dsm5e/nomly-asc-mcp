@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-05-01
+
+### Added
+
+- **Individual API Key support** — omit `issuer_id` / `ASC_ISSUER_ID` to use Individual API Keys; JWT emits `sub: "user"` per Apple spec. Display key type in `company_list` and startup log. (by [@conversun](https://github.com/conversun))
+- **Subscription pricing workflow** — new tools `subscriptions_set_price`, `subscriptions_set_availability`, `intro_offers_set_all_territories` with step-by-step setup guide in server instructions. (by [@dsm5e](https://github.com/dsm5e))
+- **Release binaries** — CI workflow publishes `darwin-arm64` and `darwin-x86_64` pre-built binaries on every release tag via GitHub Releases.
+- **`screenshots_update_preview`** — tool for setting preview frame timecode.
+
+### Fixed
+
+- **`app_versions_update_age_rating`** — was broken due to Apple moving the `ageRatingDeclaration` relationship from `appStoreVersions` to `appInfos`. Now uses `GET /v1/appInfos/{id}/ageRatingDeclaration` to fetch the declaration, then `PATCH /v1/ageRatingDeclarations/{id}`. Parameter changed from `version_id` to `app_info_id`. Also auto-injects required `parentalControls` and `ageAssurance` fields to prevent 409 errors.
+- **`HTTPClient.patch()`** generic constraint changed from `Codable` to `Encodable` — allows request-only models without `Decodable` conformance.
+- **swift-sdk** bumped from `0.3.0` to `0.12.0`.
+
 ## [2.0.0] - 2026-03-24
 
 ### Breaking Changes

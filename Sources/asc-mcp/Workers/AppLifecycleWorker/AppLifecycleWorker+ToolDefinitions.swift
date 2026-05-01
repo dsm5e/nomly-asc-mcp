@@ -345,13 +345,17 @@ extension AppLifecycleWorker {
     func updateAgeRatingTool() -> Tool {
         Tool(
             name: "app_versions_update_age_rating",
-            description: "Update age rating declaration for the app",
+            description: "Update age rating declaration for the app. Requires app_info_id (from app_info_list or app_info_get). The age rating is tied to appInfos, not appStoreVersions.",
             inputSchema: .object([
                 "type": .string("object"),
                 "properties": .object([
+                    "app_info_id": .object([
+                        "type": .string("string"),
+                        "description": .string("App Info ID (from app_info_list or app_info_get). Use this instead of version_id.")
+                    ]),
                     "version_id": .object([
                         "type": .string("string"),
-                        "description": .string("Version ID")
+                        "description": .string("Deprecated: use app_info_id instead. Kept for backwards compatibility.")
                     ]),
                     "alcohol_tobacco_or_drug_use": .object([
                         "type": .string("string"),
@@ -474,7 +478,7 @@ extension AppLifecycleWorker {
                         "description": .string("URL with developer's age rating information")
                     ])
                 ]),
-                "required": .array([.string("version_id")])
+                "required": .array([.string("app_info_id")])
             ])
         )
     }
