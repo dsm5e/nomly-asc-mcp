@@ -56,7 +56,7 @@ Each company needs: `keyID`, `privateKeyPath` (or `privateKeyContent`); `issuerI
 |--------|--------|-------|--------|
 | CompaniesWorker | `company_` | 3 | Multi-account management |
 | AuthWorker | `auth_` | 4 | JWT tokens |
-| AppsWorker | `apps_` | 9 | App listing, metadata, localizations |
+| AppsWorker | `apps_` | 10 | App listing, metadata, localizations |
 | BuildsWorker | `builds_` | 4 | Build management |
 | BuildBetaDetailsWorker | `builds_*_beta_` | 11 | TestFlight localizations, notifications, beta groups, individual testers |
 | BuildProcessingWorker | `builds_*_processing_` | 4 | Build states, encryption |
@@ -71,7 +71,7 @@ Each company needs: `keyID`, `privateKeyPath` (or `privateKeyContent`); `issuerI
 | UsersWorker | `users_` | 10 | Team members, roles, invitations, visible apps |
 | AppEventsWorker | `app_events_` | 9 | In-app events CRUD, localizations |
 | AnalyticsWorker | `analytics_` | 11 | Sales/financial reports, app summary, analytics reports/instances/segments, snapshot status |
-| SubscriptionsWorker | `subscriptions_` | 29 | Subscription CRUD, groups, localizations, prices, submit, group localizations, images, review screenshots |
+| SubscriptionsWorker | `subscriptions_` | 30 | Subscription CRUD, groups, localizations, prices, submit, group localizations, images, review screenshots |
 | OfferCodesWorker | `offer_codes_` | 10 | Subscription offer codes, one-time codes, custom codes |
 | WinBackOffersWorker | `winback_` | 5 | Win-back offers for subscriptions |
 | IntroductoryOffersWorker | `intro_offers_` | 4 | Introductory offers (free trial, pay-as-you-go, pay-up-front) |

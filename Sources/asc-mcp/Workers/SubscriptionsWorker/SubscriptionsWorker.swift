@@ -45,7 +45,8 @@ public final class SubscriptionsWorker: Sendable {
             deleteSubscriptionReviewScreenshotTool(),
             listSubscriptionImagesTool(),
             getSubscriptionReviewScreenshotForSubscriptionTool(),
-            setSubscriptionAvailabilityTool()
+            setSubscriptionAvailabilityTool(),
+            getSubscriptionsOverviewTool()
         ]
     }
 
@@ -114,6 +115,8 @@ public final class SubscriptionsWorker: Sendable {
             return try await getSubscriptionReviewScreenshotForSubscription(params)
         case "subscriptions_set_availability":
             return try await setSubscriptionAvailability(params)
+        case "subscriptions_get_overview":
+            return try await getSubscriptionsOverview(params)
         default:
             throw MCPError.methodNotFound("Unknown tool: \(params.name)")
         }

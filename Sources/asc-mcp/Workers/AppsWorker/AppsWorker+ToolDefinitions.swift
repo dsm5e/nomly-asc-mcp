@@ -255,6 +255,31 @@ extension AppsWorker {
         )
     }
 
+    func getFullMetadataTool() -> Tool {
+        return Tool(
+            name: "apps_get_full_metadata",
+            description: "Get title, subtitle and keywords for ALL localizations of the latest app version in one call. Auto-selects newest version (PREPARE_FOR_SUBMISSION preferred, then READY_FOR_SALE). Use this instead of calling apps_get_metadata 39 times.",
+            inputSchema: .object([
+                "type": .string("object"),
+                "properties": .object([
+                    "app_id": .object([
+                        "type": .string("string"),
+                        "description": .string("App Store Connect app ID")
+                    ]),
+                    "version_id": .object([
+                        "type": .string("string"),
+                        "description": .string("Optional: specific version ID to use instead of auto-detecting")
+                    ]),
+                    "locale": .object([
+                        "type": .string("string"),
+                        "description": .string("Optional: filter to a single locale (e.g. en-US)")
+                    ])
+                ]),
+                "required": .array([.string("app_id")])
+            ])
+        )
+    }
+
     func listLocalizationsTool() -> Tool {
         return Tool(
             name: "apps_list_localizations",

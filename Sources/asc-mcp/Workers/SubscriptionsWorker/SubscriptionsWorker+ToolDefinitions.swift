@@ -688,4 +688,29 @@ extension SubscriptionsWorker {
             ])
         )
     }
+
+    func getSubscriptionsOverviewTool() -> Tool {
+        return Tool(
+            name: "subscriptions_get_overview",
+            description: "Get full subscription hierarchy in one call: all groups → subscriptions → localizations + promoted purchase state and image. Use instead of chaining multiple subscriptions_list calls.",
+            inputSchema: .object([
+                "type": .string("object"),
+                "properties": .object([
+                    "app_id": .object([
+                        "type": .string("string"),
+                        "description": .string("App Store Connect app ID")
+                    ]),
+                    "include_localizations": .object([
+                        "type": .string("boolean"),
+                        "description": .string("Include subscription name/description per locale (default: true)")
+                    ]),
+                    "locales": .object([
+                        "type": .string("string"),
+                        "description": .string("Optional: filter localizations to specific locale (e.g. en-US)")
+                    ])
+                ]),
+                "required": .array([.string("app_id")])
+            ])
+        )
+    }
 }

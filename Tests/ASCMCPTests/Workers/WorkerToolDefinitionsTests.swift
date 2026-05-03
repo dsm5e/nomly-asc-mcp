@@ -6,14 +6,14 @@ import MCP
 @Suite("Worker Tool Definitions Tests")
 struct WorkerToolDefinitionsTests {
 
-    // MARK: - AppsWorker (9 tools)
+    // MARK: - AppsWorker (10 tools)
 
-    @Test("AppsWorker returns 9 tools with correct names")
+    @Test("AppsWorker returns 10 tools with correct names")
     func appsWorkerTools() async throws {
         let client = try await TestFactory.makeHTTPClient()
         let worker = AppsWorker(client: client)
         let tools = await worker.getTools()
-        #expect(tools.count == 9)
+        #expect(tools.count == 10)
         let names = Set(tools.map(\.name))
         #expect(names.contains("apps_list"))
         #expect(names.contains("apps_get_details"))
@@ -24,6 +24,7 @@ struct WorkerToolDefinitionsTests {
         #expect(names.contains("apps_create_localization"))
         #expect(names.contains("apps_delete_localization"))
         #expect(names.contains("apps_list_localizations"))
+        #expect(names.contains("apps_get_full_metadata"))
     }
 
     // MARK: - BuildsWorker (4 tools)
@@ -307,14 +308,14 @@ struct WorkerToolDefinitionsTests {
         #expect(names.contains("analytics_check_snapshot_status"))
     }
 
-    // MARK: - SubscriptionsWorker (27 tools)
+    // MARK: - SubscriptionsWorker (32 tools)
 
-    @Test("SubscriptionsWorker returns 31 tools with correct names")
+    @Test("SubscriptionsWorker returns 32 tools with correct names")
     func subscriptionsWorkerTools() async throws {
         let client = try await TestFactory.makeHTTPClient()
         let worker = SubscriptionsWorker(httpClient: client, uploadService: UploadService())
         let tools = await worker.getTools()
-        #expect(tools.count == 31)
+        #expect(tools.count == 32)
         let names = Set(tools.map(\.name))
         #expect(names.contains("subscriptions_list"))
         #expect(names.contains("subscriptions_get"))

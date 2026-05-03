@@ -5,7 +5,7 @@
 <p align="center">
   <h1 align="center">nomly-asc-mcp</h1>
   <p align="center">
-    App Store Connect MCP Server — 293 tools, 33 workers, Individual API Key support.<br/>
+    App Store Connect MCP Server — 295 tools, 33 workers, Individual API Key support.<br/>
     Manage apps, builds, TestFlight, reviews, subscriptions, and more — directly from Claude or any AI agent.
   </p>
 </p>
@@ -33,7 +33,7 @@
 
 ## Overview
 
-**nomly-asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **296 tools** across 33 workers, enabling you to automate your entire iOS/macOS release workflow through natural language.
+**nomly-asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **295 tools** across 33 workers, enabling you to automate your entire iOS/macOS release workflow through natural language.
 
 This is a maintained fork of [zelentsov-dev/asc-mcp](https://github.com/zelentsov-dev/asc-mcp) with additional fixes and features:
 - **Individual API Key support** — omit `issuer_id` to use personal keys (JWT `sub: "user"`)
@@ -426,7 +426,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ### Worker Filtering
 
-The server exposes **293 tools** across 33 workers. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use `--workers` to enable only the workers you need:
+The server exposes **295 tools** across 33 workers. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use `--workers` to enable only the workers you need:
 
 ```bash
 # Only load apps, builds, and version lifecycle tools
@@ -447,7 +447,7 @@ When `builds` is enabled, it automatically includes `build_processing` and `buil
 
 | Worker | Prefix | Tools | Description |
 |--------|--------|-------|-------------|
-| `apps` | `apps_` | 9 | App listing, metadata, localizations |
+| `apps` | `apps_` | 10 | App listing, metadata, localizations |
 | `builds` | `builds_` | 4 | Build management |
 | `build_processing` | `builds_*_processing_` | 4 | Build states, encryption |
 | `build_beta` | `builds_*_beta_` | 8 | TestFlight localizations, notifications |
@@ -456,7 +456,7 @@ When `builds` is enabled, it automatically includes `build_processing` and `buil
 | `beta_groups` | `beta_groups_` | 9 | TestFlight groups |
 | `beta_testers` | `beta_testers_` | 6 | Tester management |
 | `iap` | `iap_` | 17 | In-app purchases, prices, review screenshots |
-| `subscriptions` | `subscriptions_` | 15 | Subscription CRUD, groups, localizations, prices |
+| `subscriptions` | `subscriptions_` | 16 | Subscription CRUD, groups, localizations, prices |
 | `offer_codes` | `offer_codes_` | 7 | Subscription offer codes, one-time codes |
 | `winback` | `winback_` | 5 | Win-back offers for subscriptions |
 | `provisioning` | `provisioning_` | 17 | Bundle IDs, devices, certificates |

@@ -1553,4 +1553,137 @@ extension SubscriptionsWorker {
             "referenceName": group.attributes.referenceName.jsonSafe
         ]
     }
+
+    /// Returns full subscription hierarchy: groups → subscriptions → localizations + promoted purchase state.
+    /// Makes all nested API calls automatically and returns everything in one structured response.
+    /// - Returns: JSON with groups array, each containing subscriptions with their localizations and promoted purchase info.
+    /// - Throws: CallTool.Result with error if app_id missing or API calls fail
+    public func getSubscriptionsOverview(_ params: CallTool.Parameters) async throws -> CallTool.Result {
+        guard let arguments = params.arguments,
+              let appId = arguments["app_id"]?.stringValue else {
+            return CallTool.Result(
+                content: [.text("Error: Required parameter 'app_id' is missing")],
+                isError: true
+            )
+        }
+
+        let includeLocalizations = arguments["include_localizations"]?.boolValue ?? true
+        let localeFilter = arguments["locales"]?.stringValue
+
+        do {
+            // Step 1: Get all subscription groups
+            let groupsResp: ASCSubscriptionGroupsResponse = try await httpClient.get(
+                "/v1/apps/\(appId)/subscriptionGroups",
+                parameters: ["limit": "200", "fields[subscriptionGroups]": "referenceName"],
+                as: ASCSubscriptionGroupsResponse.self
+            )
+
+            var groupsOutput: [[String: Any]] = []
+
+            for group in groupsResp.data {
+                // Step 2: Get subscriptions in group
+                let subsResp: ASCSubscriptionsResponse = try await httpClient.get(
+                    "/v1/subscriptionGroups/\(group.id)/subscriptions",
+                    parameters: [
+                        "limit": "200",
+                        "fields[subscriptions]": "name,productId,state,subscriptionPeriod,familySharable"
+                    ],
+                    as: ASCSubscriptionsResponse.self
+                )
+
+                var subsOutput: [[String: Any]] = []
+
+                for sub in subsResp.data {
+                    var subInfo: [String: Any] = [
+                        "id": sub.id,
+                        "name": sub.attributes.name ?? "",
+                        "productId": sub.attributes.productId ?? "",
+                        "state": sub.attributes.state ?? "",
+                        "period": sub.attributes.subscriptionPeriod ?? ""
+                    ]
+
+                    // Step 3a: Get localizations
+                    if includeLocalizations {
+                        var locParams: [String: String] = [
+                            "limit": "200",
+                            "fields[subscriptionLocalizations]": "locale,name,description"
+                        ]
+                        if let lf = localeFilter { locParams["filter[locale]"] = lf }
+
+                        let locsResp: ASCSubscriptionLocalizationsResponse = try await httpClient.get(
+                            "/v1/subscriptions/\(sub.id)/subscriptionLocalizations",
+                            parameters: locParams,
+                            as: ASCSubscriptionLocalizationsResponse.self
+                        )
+                        let locs: [[String: Any]] = locsResp.data.map { loc in
+                            return [
+                                "locale": loc.attributes.locale ?? "",
+                                "name": loc.attributes.name ?? "",
+                                "description": loc.attributes.description ?? ""
+                            ] as [String: Any]
+                        }
+                        subInfo["localizations"] = locs
+                        subInfo["localizationCount"] = locs.count
+                    }
+
+                    // Step 3b: Get promoted purchase state (may not exist → catch 404)
+                    do {
+                        let ppResp: ASCPromotedPurchaseResponse = try await httpClient.get(
+                            "/v1/subscriptions/\(sub.id)/promotedPurchase",
+                            parameters: ["fields[promotedPurchases]": "state,enabled,visibleForAllUsers"],
+                            as: ASCPromotedPurchaseResponse.self
+                        )
+                        let pp = ppResp.data
+                        var ppInfo: [String: Any] = [
+                            "id": pp.id,
+                            "state": pp.attributes?.state ?? "",
+                            "enabled": pp.attributes?.enabled ?? false
+                        ]
+                        // Check if image exists (may return 404 if not uploaded yet)
+                        do {
+                            let imgResp: ASCSubscriptionImageResponse = try await httpClient.get(
+                                "/v1/promotedPurchases/\(pp.id)/promotionImage",
+                                parameters: ["fields[subscriptionImages]": "state,imageAsset"],
+                                as: ASCSubscriptionImageResponse.self
+                            )
+                            let img = imgResp.data
+                            ppInfo["image"] = [
+                                "id": img.id,
+                                "state": img.attributes?.state ?? "",
+                                "hasAsset": !(img.attributes?.imageAsset?.templateUrl?.isEmpty ?? true)
+                            ] as [String: Any]
+                        } catch {
+                            ppInfo["image"] = "none"
+                        }
+                        subInfo["promotedPurchase"] = ppInfo
+                    } catch {
+                        subInfo["promotedPurchase"] = "none"
+                    }
+
+                    subsOutput.append(subInfo)
+                }
+
+                groupsOutput.append([
+                    "id": group.id,
+                    "referenceName": group.attributes.referenceName ?? "",
+                    "subscriptionCount": subsOutput.count,
+                    "subscriptions": subsOutput
+                ] as [String: Any])
+            }
+
+            let result: [String: Any] = [
+                "success": true,
+                "appId": appId,
+                "groupCount": groupsOutput.count,
+                "groups": groupsOutput
+            ]
+            return CallTool.Result(content: [.text(JSONFormatter.formatJSON(result))])
+
+        } catch {
+            return CallTool.Result(
+                content: [.text("Error: \(error.localizedDescription)")],
+                isError: true
+            )
+        }
+    }
 }

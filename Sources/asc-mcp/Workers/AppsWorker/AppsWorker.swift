@@ -22,7 +22,8 @@ public final class AppsWorker: Sendable {
             updateMetadataTool(),
             createLocalizationTool(),
             deleteLocalizationTool(),
-            listLocalizationsTool()
+            listLocalizationsTool(),
+            getFullMetadataTool()
         ]
     }
     
@@ -47,6 +48,8 @@ public final class AppsWorker: Sendable {
             return try await self.deleteLocalization(params)
         case "apps_list_localizations":
             return try await self.listLocalizations(params)
+        case "apps_get_full_metadata":
+            return try await self.getFullMetadata(params)
         default:
             throw MCPError.methodNotFound("Unknown tool")
         }

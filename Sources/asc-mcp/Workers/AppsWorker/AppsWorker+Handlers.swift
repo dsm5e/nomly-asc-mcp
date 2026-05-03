@@ -1048,4 +1048,135 @@ extension AppsWorker {
             return CallTool.Result(content: [.text(JSONFormatter.formatJSON(result))], isError: true)
         }
     }
+
+    /// Returns title, subtitle and keywords for all localizations of the latest app version in one call.
+    /// Auto-selects the newest version (PREPARE_FOR_SUBMISSION preferred, then READY_FOR_SALE, then latest).
+    /// - Returns: JSON with version info and array of localizations each containing locale, title, subtitle, keywords and their char lengths.
+    /// - Throws: CallTool.Result with error if app_id missing or API calls fail
+    public func getFullMetadata(_ params: CallTool.Parameters) async throws -> CallTool.Result {
+        guard let arguments = params.arguments,
+              let appId = arguments["app_id"]?.stringValue else {
+            return CallTool.Result(
+                content: [.text("Error: Required parameter 'app_id' is missing")],
+                isError: true
+            )
+        }
+
+        let localeFilter = arguments["locale"]?.stringValue
+        let versionIdParam = arguments["version_id"]?.stringValue
+
+        do {
+            // Step 1: Resolve version
+            let versionId: String
+            let versionString: String
+            let versionState: String
+
+            if let vid = versionIdParam {
+                let vr: ASCAppStoreVersionResponse = try await httpClient.get(
+                    "/v1/appStoreVersions/\(vid)",
+                    parameters: ["fields[appStoreVersions]": "versionString,appStoreState"],
+                    as: ASCAppStoreVersionResponse.self
+                )
+                versionId = vr.data.id
+                versionString = vr.data.version
+                versionState = vr.data.state
+            } else {
+                let vr: ASCAppStoreVersionsResponse = try await httpClient.get(
+                    "/v1/apps/\(appId)/appStoreVersions",
+                    parameters: ["fields[appStoreVersions]": "versionString,appStoreState,createdDate,platform", "limit": "10"],
+                    as: ASCAppStoreVersionsResponse.self
+                )
+                guard !vr.data.isEmpty else {
+                    return CallTool.Result(content: [.text("Error: No versions found for app \(appId)")], isError: true)
+                }
+                let platformPriority = ["IOS", "MAC_OS", "TV_OS", "WATCH_OS", "VISION_OS"]
+                func preferPlatform(_ list: [ASCAppStoreVersion]) -> ASCAppStoreVersion? {
+                    for p in platformPriority { if let m = list.first(where: { $0.attributes?.platform == p }) { return m } }
+                    return list.first
+                }
+                let selected = preferPlatform(vr.data.filter { $0.attributes?.appStoreState == "PREPARE_FOR_SUBMISSION" })
+                    ?? preferPlatform(vr.data.filter { $0.attributes?.appStoreState == "READY_FOR_SALE" })
+                    ?? vr.data[0]
+                versionId = selected.id
+                versionString = selected.attributes?.versionString ?? "N/A"
+                versionState = selected.attributes?.appStoreState ?? "UNKNOWN"
+            }
+
+            // Step 2: Fetch all version localizations (keywords, whatsNew)
+            var locParams: [String: String] = [
+                "fields[appStoreVersionLocalizations]": "locale,keywords",
+                "limit": "200"
+            ]
+            if let lf = localeFilter { locParams["filter[locale]"] = lf }
+            let locResp: ASCAppStoreVersionLocalizationsResponse = try await httpClient.get(
+                "/v1/appStoreVersions/\(versionId)/appStoreVersionLocalizations",
+                parameters: locParams,
+                as: ASCAppStoreVersionLocalizationsResponse.self
+            )
+
+            // Step 3: Fetch appInfo localizations (title, subtitle)
+            let appInfosResp: ASCAppInfosResponse = try await httpClient.get(
+                "/v1/apps/\(appId)/appInfos",
+                parameters: ["fields[appInfos]": "appStoreState"],
+                as: ASCAppInfosResponse.self
+            )
+            let matchingAppInfo = appInfosResp.data.first(where: { $0.attributes?.appStoreState == versionState })
+                ?? appInfosResp.data.first
+
+            var titleByLocale: [String: (name: String, subtitle: String)] = [:]
+            if let infoId = matchingAppInfo?.id {
+                var infoLocParams: [String: String] = [
+                    "fields[appInfoLocalizations]": "locale,name,subtitle",
+                    "limit": "200"
+                ]
+                if let lf = localeFilter { infoLocParams["filter[locale]"] = lf }
+                let infoLocResp: ASCAppInfoLocalizationsResponse = try await httpClient.get(
+                    "/v1/appInfos/\(infoId)/appInfoLocalizations",
+                    parameters: infoLocParams,
+                    as: ASCAppInfoLocalizationsResponse.self
+                )
+                for loc in infoLocResp.data {
+                    titleByLocale[loc.attributes?.locale ?? ""] = (
+                        name: loc.attributes?.name ?? "",
+                        subtitle: loc.attributes?.subtitle ?? ""
+                    )
+                }
+            }
+
+            // Step 4: Build response
+            let localizations: [[String: Any]] = locResp.data.map { loc in
+                let locale = loc.attributes?.locale ?? ""
+                let keywords = loc.attributes?.keywords ?? ""
+                let info = titleByLocale[locale]
+                let name = info?.name ?? ""
+                let subtitle = info?.subtitle ?? ""
+                return [
+                    "locale": locale,
+                    "title": name,
+                    "title_len": name.count,
+                    "subtitle": subtitle,
+                    "subtitle_len": subtitle.count,
+                    "keywords": keywords,
+                    "keywords_len": keywords.count
+                ] as [String: Any]
+            }
+
+            let result: [String: Any] = [
+                "success": true,
+                "appId": appId,
+                "version": versionString,
+                "versionState": versionState,
+                "versionId": versionId,
+                "totalLocalizations": localizations.count,
+                "localizations": localizations
+            ]
+            return CallTool.Result(content: [.text(JSONFormatter.formatJSON(result))])
+
+        } catch {
+            return CallTool.Result(
+                content: [.text("Error: \(error.localizedDescription)")],
+                isError: true
+            )
+        }
+    }
 }
