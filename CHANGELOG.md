@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- OpenAPI coverage tooling via `asc-mcp openapi-coverage`, using Apple's official App Store Connect OpenAPI JSON without loading ASC credentials or starting the MCP server.
+- Generated `ASC-OPENAPI-COVERAGE-GENERATED.md` report for Apple App Store Connect API 4.3 with domain-level path/operation counts and drift triage.
+
+### Changed
+
+- CI now smoke-tests the OpenAPI coverage command against a local fixture.
+- Coverage inventory now marks automated OpenAPI drift reporting as implemented.
+
 ## [2.1.0] - 2026-05-05
 
 ### Added

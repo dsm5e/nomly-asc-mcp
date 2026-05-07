@@ -4,6 +4,15 @@ import MCP
 @main
 struct ASCMCPApp {
     static func main() async throws {
+        do {
+            if try ASCOpenAPICoverageCommand.runIfRequested(arguments: CommandLine.arguments) {
+                return
+            }
+        } catch {
+            print("OpenAPI coverage error: \(error.localizedDescription)", to: &standardError)
+            exit(1)
+        }
+
         #if DEBUG
         if CommandLine.arguments.contains("--test") {
             print("Test mode activated", to: &standardError)

@@ -53,13 +53,13 @@ enum ASCCoverageInventory {
                 "Apple API error decoding",
                 "pagination helpers",
                 "bounded upload flow",
-                "rate-limit metadata capture"
+                "rate-limit metadata capture",
+                "automated OpenAPI spec coverage report generation"
             ],
             missingCapabilities: [
-                "automated OpenAPI spec diff against app-store-connect-openapi-specification.zip",
                 "first-class API key revocation/read inventory helpers"
             ],
-            notes: "Core runtime behavior is covered, but release-time API drift detection still needs an automated spec diff."
+            notes: "Core runtime behavior is covered; OpenAPI drift is now generated from Apple's official specification."
         ),
         ASCCoverageArea(
             name: "App Store app metadata and release operations",

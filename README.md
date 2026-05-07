@@ -45,6 +45,7 @@
 - **Analytics & Metrics** — sales/financial reports, analytics reports, performance metrics, diagnostics
 - **Metadata management** — localized descriptions, keywords, What's New across all locales
 - **MCP 2025-11-25 surface** — tool annotations, output schemas for stable tools, structured JSON results, and safe result-size metadata
+- **OpenAPI drift tooling** — generate coverage reports from Apple's official App Store Connect OpenAPI specification
 
 ## Quick Start
 
@@ -396,6 +397,24 @@ asc-mcp --read-only --workers apps,builds,reviews,analytics
 ```
 
 In this mode, read tools such as `*_list`, `*_get`, `*_search`, `*_status`, `auth_*`, analytics, and metrics remain available. Tools that can create, update, upload, submit, release, delete, revoke, clear, cancel, or otherwise mutate App Store Connect are blocked before their worker handler runs. `company_switch` remains available because it changes only the local active company context.
+
+### OpenAPI Drift Tooling
+
+Use the built-in OpenAPI coverage command to compare the maintained `asc-mcp` coverage map with Apple's latest App Store Connect OpenAPI specification. This command does **not** load App Store Connect credentials, does **not** start the MCP server, and does **not** call Apple APIs beyond your explicit spec download.
+
+```bash
+rm -rf /tmp/asc-openapi
+mkdir -p /tmp/asc-openapi
+curl -L --fail -o /tmp/asc-openapi/spec.zip \
+  https://developer.apple.com/sample-code/app-store-connect/app-store-connect-openapi-specification.zip
+unzip -q /tmp/asc-openapi/spec.zip -d /tmp/asc-openapi
+
+swift run asc-mcp openapi-coverage \
+  --spec /tmp/asc-openapi/openapi.oas.json \
+  --output ASC-OPENAPI-COVERAGE-GENERATED.md
+```
+
+The generated report records Apple spec metadata, path and operation counts, domain status, P0/P1 gaps, missing domains, and unclassified paths. The current checked-in report is [`ASC-OPENAPI-COVERAGE-GENERATED.md`](ASC-OPENAPI-COVERAGE-GENERATED.md), generated from App Store Connect API 4.3.
 
 **Available worker names:**
 
