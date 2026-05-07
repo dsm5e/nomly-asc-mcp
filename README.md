@@ -52,7 +52,7 @@
 ```bash
 # 1. Install via Mint
 brew install mint
-mint install zelentsov-dev/asc-mcp@2.1.0
+mint install zelentsov-dev/asc-mcp@v2.2.0
 
 # 2. Add to Claude Code with env vars (simplest setup)
 claude mcp add asc-mcp \
@@ -84,7 +84,7 @@ Or use a JSON config file — see [Configuration](#configuration) below.
 brew install mint
 
 # Install asc-mcp from GitHub
-mint install zelentsov-dev/asc-mcp@2.1.0
+mint install zelentsov-dev/asc-mcp@v2.2.0
 
 # Register in Claude Code
 claude mcp add asc-mcp -- ~/.mint/bin/asc-mcp
@@ -95,13 +95,13 @@ To install a specific branch or tag:
 ```bash
 mint install zelentsov-dev/asc-mcp@main      # main branch
 mint install zelentsov-dev/asc-mcp@develop    # develop branch
-mint install zelentsov-dev/asc-mcp@2.1.0      # specific tag
+mint install zelentsov-dev/asc-mcp@v2.2.0     # specific tag
 ```
 
 To update to the latest version:
 
 ```bash
-mint install zelentsov-dev/asc-mcp@2.1.0 --force
+mint install zelentsov-dev/asc-mcp@v2.2.0 --force
 ```
 
 ### Option B: Build from Source
@@ -1021,10 +1021,10 @@ Includes App Store review attachment upload, get, delete, and list tools.
 ### Complete Release Workflow
 
 ```
-You: "Release version 2.1.0 of my app with build 456"
+You: "Release version 2.2.0 of my app with build 456"
 
 Claude will:
-1. app_versions_create(app_id, platform: "IOS", version_string: "2.1.0")
+1. app_versions_create(app_id, platform: "IOS", version_string: "2.2.0")
 2. app_versions_attach_build(version_id, build_id)
 3. app_versions_set_review_details(version_id, contact_email: "...")
 4. app_versions_submit_for_review(version_id)

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-05-07
+
 ### Added
 
 - OpenAPI coverage tooling via `asc-mcp openapi-coverage`, using Apple's official App Store Connect OpenAPI JSON without loading ASC credentials or starting the MCP server.
