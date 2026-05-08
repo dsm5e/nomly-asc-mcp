@@ -44,6 +44,7 @@ public func runApplication(options: AppRuntimeOptions = AppRuntimeOptions()) asy
         After selecting a company, use:
         - auth_* — authentication
         - apps_* — app management and metadata
+        - accessibility_* — App Store accessibility declarations by device family
         - webhooks_* — webhook notifications and delivery diagnostics
         - xcode_cloud_* — Xcode Cloud products, workflows, builds, artifacts, issues, test results, and SCM resources
         - builds_* — build management

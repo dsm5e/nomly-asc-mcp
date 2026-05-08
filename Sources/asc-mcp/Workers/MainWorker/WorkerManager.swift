@@ -51,6 +51,7 @@ public actor WorkerManager {
     /// Blocks App Store Connect mutation tools before they reach worker handlers.
     private let readOnlyMode: Bool
     private var appsWorker: AppsWorker
+    private var accessibilityWorker: AccessibilityWorker
     private var webhooksWorker: WebhooksWorker
     private var xcodeCloudWorker: XcodeCloudWorker
     private var buildsWorker: BuildsWorker
@@ -97,6 +98,7 @@ public actor WorkerManager {
         self.uploadService = UploadService()
 
         self.appsWorker = await AppsWorker(client: dependencies.httpClient)
+        self.accessibilityWorker = await AccessibilityWorker(httpClient: dependencies.httpClient)
         self.webhooksWorker = await WebhooksWorker(httpClient: dependencies.httpClient)
         self.xcodeCloudWorker = await XcodeCloudWorker(httpClient: dependencies.httpClient)
         self.buildsWorker = await BuildsWorker(httpClient: dependencies.httpClient)
@@ -205,6 +207,7 @@ public actor WorkerManager {
                 handle: { try await self.dependencies.authWorker.handleTool($0) }
             ),
             WorkerDescriptor(key: "apps", enabledKeys: ["apps"], prefixes: ["apps_"], getTools: { await self.getAppsTools() }, handle: { try await self.appsWorker.handleTool($0) }),
+            WorkerDescriptor(key: "accessibility", enabledKeys: ["accessibility"], prefixes: ["accessibility_"], getTools: { await self.getAccessibilityTools() }, handle: { try await self.accessibilityWorker.handleTool($0) }),
             WorkerDescriptor(key: "webhooks", enabledKeys: ["webhooks"], prefixes: ["webhooks_"], getTools: { await self.getWebhooksTools() }, handle: { try await self.webhooksWorker.handleTool($0) }),
             WorkerDescriptor(key: "xcode_cloud", enabledKeys: ["xcode_cloud"], prefixes: ["xcode_cloud_"], getTools: { await self.getXcodeCloudTools() }, handle: { try await self.xcodeCloudWorker.handleTool($0) }),
             WorkerDescriptor(
@@ -338,6 +341,7 @@ public actor WorkerManager {
     public func reinitializeWorkers() async throws {
         try await dependencies.updateForCompany()
         self.appsWorker = await AppsWorker(client: dependencies.httpClient)
+        self.accessibilityWorker = await AccessibilityWorker(httpClient: dependencies.httpClient)
         self.webhooksWorker = await WebhooksWorker(httpClient: dependencies.httpClient)
         self.xcodeCloudWorker = await XcodeCloudWorker(httpClient: dependencies.httpClient)
         self.buildsWorker = await BuildsWorker(httpClient: dependencies.httpClient)
@@ -419,6 +423,11 @@ public actor WorkerManager {
     /// Get tools from apps worker  
     private func getAppsTools() async -> [Tool] {
         return await appsWorker.getTools()
+    }
+
+    /// Get tools from accessibility declarations worker
+    private func getAccessibilityTools() async -> [Tool] {
+        return await accessibilityWorker.getTools()
     }
 
     /// Get tools from webhooks worker

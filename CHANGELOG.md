@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-05-08
+
+### Added
+
+- Accessibility declaration tools (`accessibility_*`) for listing, reading, creating, updating/publishing, deleting, and relationship-only listing of App Store accessibility declarations by device family.
+
+### Changed
+
+- README worker counts, worker filtering docs, and coverage matrix now reflect 345 tools across 36 worker domains.
+
 ## [2.2.0] - 2026-05-07
 
 ### Added

@@ -67,7 +67,7 @@ struct ASCMCPApp {
         }
 
         let validWorkers: Set<String> = [
-            "company", "auth", "apps", "webhooks", "xcode_cloud", "builds", "build_processing", "build_beta",
+            "company", "auth", "apps", "accessibility", "webhooks", "xcode_cloud", "builds", "build_processing", "build_beta",
             "versions", "reviews", "beta_groups", "beta_feedback", "beta_testers", "iap",
             "provisioning", "app_info", "pricing", "users", "app_events", "analytics",
             "subscriptions", "offer_codes", "winback", "intro_offers", "promo_offers",

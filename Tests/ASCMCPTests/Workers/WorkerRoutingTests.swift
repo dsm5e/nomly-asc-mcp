@@ -23,6 +23,9 @@ struct WorkerRoutingTests {
     func workerManagerRoutesDistinctLongPrefixes() async throws {
         let manager = try await TestFactory.makeWorkerManager()
 
+        let accessibility = try await manager.routeTool(CallTool.Parameters(name: "accessibility_get", arguments: nil))
+        #expect(accessibility.isError == true)
+
         let version = try await manager.routeTool(CallTool.Parameters(name: "app_versions_get", arguments: nil))
         #expect(version.isError == true)
 
@@ -64,6 +67,18 @@ struct WorkerRoutingTests {
         let client = try await TestFactory.makeHTTPClient()
         let worker = AppsWorker(client: client)
         let params = CallTool.Parameters(name: "apps_nonexistent", arguments: nil)
+        await #expect(throws: MCPError.self) {
+            _ = try await worker.handleTool(params)
+        }
+    }
+
+    // MARK: - AccessibilityWorker
+
+    @Test("AccessibilityWorker throws MCPError.methodNotFound for unknown tool")
+    func accessibilityWorkerUnknownTool() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = AccessibilityWorker(httpClient: client)
+        let params = CallTool.Parameters(name: "accessibility_nonexistent", arguments: nil)
         await #expect(throws: MCPError.self) {
             _ = try await worker.handleTool(params)
         }

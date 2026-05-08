@@ -67,11 +67,12 @@ enum ASCCoverageInventory {
             status: .partial,
             priority: .p0,
             workerKeys: [
-                "apps", "versions", "app_info", "pricing", "app_events",
+                "apps", "accessibility", "versions", "app_info", "pricing", "app_events",
                 "screenshots", "custom_pages", "ppo", "promoted", "review_attachments", "reviews"
             ],
             coveredCapabilities: [
                 "apps, app info, version lifecycle, review responses",
+                "accessibility declarations",
                 "pricing and availability",
                 "in-app events",
                 "screenshots and app previews",
@@ -81,7 +82,6 @@ enum ASCCoverageInventory {
                 "review attachments"
             ],
             missingCapabilities: [
-                "accessibility declarations",
                 "App Clips and advanced App Clip experiences",
                 "background assets",
                 "app tags",

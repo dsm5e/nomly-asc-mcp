@@ -26,6 +26,23 @@ struct WorkerToolDefinitionsTests {
         #expect(names.contains("apps_list_localizations"))
     }
 
+    // MARK: - AccessibilityWorker (6 tools)
+
+    @Test("AccessibilityWorker returns 6 tools with correct names")
+    func accessibilityWorkerTools() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = AccessibilityWorker(httpClient: client)
+        let tools = await worker.getTools()
+        #expect(tools.count == 6)
+        let names = Set(tools.map(\.name))
+        #expect(names.contains("accessibility_list"))
+        #expect(names.contains("accessibility_get"))
+        #expect(names.contains("accessibility_create"))
+        #expect(names.contains("accessibility_update"))
+        #expect(names.contains("accessibility_delete"))
+        #expect(names.contains("accessibility_list_relationships"))
+    }
+
     // MARK: - WebhooksWorker (8 tools)
 
     @Test("WebhooksWorker returns 8 tools with correct names")
@@ -666,6 +683,7 @@ struct WorkerToolDefinitionsTests {
 
         var allNames: [String] = []
         allNames += (await AppsWorker(client: client).getTools()).map(\.name)
+        allNames += (await AccessibilityWorker(httpClient: client).getTools()).map(\.name)
         allNames += (await WebhooksWorker(httpClient: client).getTools()).map(\.name)
         allNames += (await BuildsWorker(httpClient: client).getTools()).map(\.name)
         allNames += (await BuildProcessingWorker(httpClient: client).getTools()).map(\.name)
@@ -709,6 +727,7 @@ struct WorkerToolDefinitionsTests {
         let allTools: [Tool] = await {
             var tools: [Tool] = []
             tools += await AppsWorker(client: client).getTools()
+            tools += await AccessibilityWorker(httpClient: client).getTools()
             tools += await WebhooksWorker(httpClient: client).getTools()
             tools += await BuildsWorker(httpClient: client).getTools()
             tools += await BuildProcessingWorker(httpClient: client).getTools()

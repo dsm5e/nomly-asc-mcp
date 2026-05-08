@@ -29,7 +29,7 @@
 
 ## Overview
 
-**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **339 tools** across 35 worker domains, enabling you to automate your entire iOS/macOS release workflow through natural language.
+**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **345 tools** across 36 worker domains, enabling you to automate your entire iOS/macOS release workflow through natural language.
 
 ### Key capabilities
 
@@ -42,6 +42,7 @@
 - **Subscriptions** — subscription CRUD, groups, localizations, prices, offer codes, win-back offers
 - **Provisioning** — bundle IDs, devices, certificates, profiles, capabilities
 - **Marketing** — screenshots, app previews, custom product pages, A/B testing (PPO), promoted purchases
+- **Accessibility declarations** — manage App Store accessibility support declarations by device family
 - **Analytics & Metrics** — sales/financial reports, analytics reports, performance metrics, diagnostics
 - **Metadata management** — localized descriptions, keywords, What's New across all locales
 - **MCP 2025-11-25 surface** — tool annotations, output schemas for stable tools, structured JSON results, and safe result-size metadata
@@ -52,7 +53,7 @@
 ```bash
 # 1. Install via Mint
 brew install mint
-mint install zelentsov-dev/asc-mcp@v2.2.0
+mint install zelentsov-dev/asc-mcp@v2.3.0
 
 # 2. Add to Claude Code with env vars (simplest setup)
 claude mcp add asc-mcp \
@@ -84,7 +85,7 @@ Or use a JSON config file — see [Configuration](#configuration) below.
 brew install mint
 
 # Install asc-mcp from GitHub
-mint install zelentsov-dev/asc-mcp@v2.2.0
+mint install zelentsov-dev/asc-mcp@v2.3.0
 
 # Register in Claude Code
 claude mcp add asc-mcp -- ~/.mint/bin/asc-mcp
@@ -95,13 +96,13 @@ To install a specific branch or tag:
 ```bash
 mint install zelentsov-dev/asc-mcp@main      # main branch
 mint install zelentsov-dev/asc-mcp@develop    # develop branch
-mint install zelentsov-dev/asc-mcp@v2.2.0     # specific tag
+mint install zelentsov-dev/asc-mcp@v2.3.0     # specific tag
 ```
 
 To update to the latest version:
 
 ```bash
-mint install zelentsov-dev/asc-mcp@v2.2.0 --force
+mint install zelentsov-dev/asc-mcp@v2.3.0 --force
 ```
 
 ### Option B: Build from Source
@@ -361,7 +362,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 }
 ```
 
-> **Note:** Windsurf has a 100-tool limit. The server exposes 339 tools by default, so you must use `--workers` to select a subset. See [Worker Filtering](#worker-filtering) below.
+> **Note:** Windsurf has a 100-tool limit. The server exposes 345 tools by default, so you must use `--workers` to select a subset. See [Worker Filtering](#worker-filtering) below.
 
 </details>
 
@@ -370,14 +371,14 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ### Worker Filtering
 
-The server exposes **339 tools** across 35 worker domains. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use `--workers` to enable only the workers you need:
+The server exposes **345 tools** across 36 worker domains. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use `--workers` to enable only the workers you need:
 
 ```bash
 # Only load apps, builds, and version lifecycle tools
 asc-mcp --workers apps,builds,versions
 
-# Full release workflow subset (~60 tools, fits within any client limit)
-asc-mcp --workers apps,builds,versions,reviews,beta_groups,iap
+# Full release + App Store compliance subset (~96 tools, fits within 100-tool clients)
+asc-mcp --workers apps,accessibility,builds,versions,reviews,beta_groups,iap
 
 # Monetization focus
 asc-mcp --workers apps,iap,subscriptions,offer_codes,winback,pricing,promoted
@@ -423,6 +424,7 @@ The generated report records Apple spec metadata, path and operation counts, dom
 | `company` | `company_` | 3 | Multi-account management |
 | `auth` | `auth_` | 4 | JWT token tools |
 | `apps` | `apps_` | 9 | App listing, metadata, localizations |
+| `accessibility` | `accessibility_` | 6 | App Store accessibility declarations |
 | `webhooks` | `webhooks_` | 8 | Webhook notifications and deliveries |
 | `xcode_cloud` | `xcode_cloud_` | 30 | Xcode Cloud products, workflows, build runs, artifacts, issues, test results, and SCM |
 | `builds` | `builds_` | 4 | Build management |
@@ -462,7 +464,7 @@ When connected to an LLM client, tool definitions consume context tokens. Here's
 
 | Configuration | Tools | ~Tokens |
 |---|---:|---:|
-| All workers (default) | 339 | **~38,000** |
+| All workers (default) | 345 | **~39,000** |
 | Release workflow: `apps,builds,versions,reviews` | ~57 | ~7,000 |
 | Monetization: `apps,iap,subscriptions,pricing` | ~78 | ~9,000 |
 | TestFlight: `apps,builds,beta_groups,beta_testers` | ~56 | ~6,000 |
@@ -471,11 +473,11 @@ When connected to an LLM client, tool definitions consume context tokens. Here's
 
 **Heaviest workers:** Xcode Cloud (30 tools), Subscriptions (29 tools), InAppPurchases (24 tools), Provisioning (17 tools), Screenshots (16 tools).
 
-For Claude (200K context) ~38K tokens is about 19% of the window. For clients with smaller context windows, use `--workers` to reduce the footprint.
+For Claude (200K context) ~39K tokens is about 20% of the window. For clients with smaller context windows, use `--workers` to reduce the footprint.
 
 ## Available Tools
 
-**339 tools** organized across 35 worker domains (use `--workers` to filter — see [Worker Filtering](#worker-filtering)):
+**345 tools** organized across 36 worker domains (use `--workers` to filter — see [Worker Filtering](#worker-filtering)):
 
 <details>
 <summary><strong>Company Management</strong> — 3 tools</summary>
@@ -514,6 +516,20 @@ For Claude (200K context) ~38K tokens is about 19% of the window. For clients wi
 | `apps_list_localizations` | List localizations with content status |
 | `apps_create_localization` | Create a new localization for a version |
 | `apps_delete_localization` | Delete a localization from a version |
+
+</details>
+
+<details>
+<summary><strong>Accessibility Declarations</strong> — 6 tools</summary>
+
+| Tool | Description |
+|------|-------------|
+| `accessibility_list` | List accessibility declarations for an app |
+| `accessibility_get` | Get one accessibility declaration |
+| `accessibility_create` | Create a declaration for a device family |
+| `accessibility_update` | Update support flags or publish a declaration |
+| `accessibility_delete` | Delete a declaration |
+| `accessibility_list_relationships` | List declaration relationship IDs for an app |
 
 </details>
 
@@ -1100,11 +1116,12 @@ Sources/asc-mcp/
 │   ├── HTTPClient.swift            #   Actor-based HTTP with retry logic
 │   ├── JWTService.swift            #   ES256 JWT token generation
 │   └── CompaniesManager.swift      #   Multi-account management
-└── Workers/                        # MCP tool implementations (35 worker domains + MainWorker router)
+└── Workers/                        # MCP tool implementations (36 worker domains + MainWorker router)
     ├── MainWorker/WorkerManager    #   Central tool registry & routing
     ├── CompaniesWorker/            #   company_* tools
     ├── AuthWorker/                 #   auth_* tools
     ├── AppsWorker/                 #   apps_* tools
+    ├── AccessibilityWorker/        #   accessibility_* tools
     ├── BuildsWorker/               #   builds_* tools
     ├── BuildProcessingWorker/      #   builds_*_processing tools
     ├── BuildBetaDetailsWorker/     #   builds_*_beta_* tools
