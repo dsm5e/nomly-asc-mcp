@@ -134,21 +134,24 @@ enum ASCCoverageInventory {
                 "send webhook ping"
             ],
             missingCapabilities: [],
-            notes: "Covers app webhooks, individual webhook reads, create/update/delete, delivery listing, redelivery, and ping testing."
+            notes: "Covers app webhooks, individual webhook reads, create/update/delete, delivery listing, redelivery, ping testing, and local receiver diagnostics."
         ),
         ASCCoverageArea(
             name: "Webhook notification receiver resources",
             appleDocumentationURL: "https://developer.apple.com/documentation/appstoreconnectapi/webhook-notifications",
-            status: .missing,
+            status: .partial,
             priority: .p1,
-            workerKeys: [],
-            coveredCapabilities: [],
-            missingCapabilities: [
-                "receiver-side signature verification helpers",
+            workerKeys: ["webhooks"],
+            coveredCapabilities: [
+                "receiver-side x-apple-signature verification",
                 "webhook event payload decoder",
-                "prompt/resource templates for event triage"
+                "event and delivery triage recommendations"
             ],
-            notes: "The App Store Connect management API is covered; receiver-side helpers are local MCP value-add and should not call Apple."
+            missingCapabilities: [
+                "hosted receiver server templates",
+                "MCP prompt/resource templates for reusable event playbooks"
+            ],
+            notes: "Local receiver helpers are now available and remain read-only; future work can add deployable receiver templates and reusable playbooks."
         ),
         ASCCoverageArea(
             name: "In-app purchases, subscriptions, and offers",

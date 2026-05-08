@@ -31,13 +31,13 @@ Unclassified paths: 0
 | Essentials: auth, errors, paging, uploads, rate limits | Partial | P1 | 0 | 0 | `auth` | Core runtime behavior is covered; OpenAPI drift is now generated from Apple's official specification. |
 | Provisioning and identifiers | Partial | P1 | 32 | 49 | `provisioning` | Core signing automation exists; Wallet and Apple Pay identifiers are useful next additions. |
 | Reporting, analytics, metrics, and diagnostics | Partial | P1 | 47 | 56 | `analytics`, `metrics` | Read-heavy workflows are safe and valuable; summaries and recommendations are high UX leverage. |
-| Webhook notification receiver resources | Missing | P1 | 0 | 0 | none | The App Store Connect management API is covered; receiver-side helpers are local MCP value-add and should not call Apple. |
+| Webhook notification receiver resources | Partial | P1 | 0 | 0 | `webhooks` | Local receiver helpers are now available and remain read-only; future work can add deployable receiver templates and reusable playbooks. |
 | Xcode Cloud workflows and builds | Partial | P1 | 56 | 59 | `xcode_cloud` | Covers read-heavy CI dashboards plus start/rebuild build runs; destructive workflow/product management remains intentionally deferred. |
 | Alternative distribution | Missing | P2 | 21 | 28 | none | Region- and entitlement-sensitive APIs should be opt-in and strongly documented. |
 | Game Center | Missing | P2 | 238 | 337 | none | Large domain; should be added only after OpenAPI-driven scaffolding is in place. |
 | In-app purchases, subscriptions, and offers | Covered | P2 | 129 | 163 | `iap`, `subscriptions`, `offer_codes`, `winback`, `intro_offers`, `promo_offers` | Coverage is broad enough for production workflows; future work is mostly schema tightening and OpenAPI drift checks. |
 | Users, access, and sandbox testers | Partial | P2 | 13 | 20 | `users`, `sandbox` | User management is serviceable; API key operations should remain carefully annotated as high-risk. |
-| Webhook notifications | Covered | P2 | 6 | 8 | `webhooks` | Covers app webhooks, individual webhook reads, create/update/delete, delivery listing, redelivery, and ping testing. |
+| Webhook notifications | Covered | P2 | 6 | 8 | `webhooks` | Covers app webhooks, individual webhook reads, create/update/delete, delivery listing, redelivery, ping testing, and local receiver diagnostics. |
 
 ## Missing Apple Domains
 

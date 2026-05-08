@@ -63,7 +63,10 @@ enum ToolMetadataPolicy {
         "_stats",
         "_status",
         "_check",
-        "_current"
+        "_current",
+        "_verify",
+        "_parse",
+        "_triage"
     ]
 
     private static let destructiveMarkers = [
@@ -124,6 +127,12 @@ enum ToolMetadataPolicy {
             return appsDetailsSchema
         case "analytics_sales_report", "analytics_financial_report", "analytics_app_summary":
             return genericSuccessSchema(description: "Analytics report result")
+        case "webhooks_verify_signature":
+            return webhookSignatureSchema
+        case "webhooks_parse_payload":
+            return genericSuccessSchema(description: "Parsed App Store Connect webhook payload")
+        case "webhooks_triage_event":
+            return genericSuccessSchema(description: "Webhook event triage result")
         default:
             return nil
         }
@@ -185,5 +194,26 @@ enum ToolMetadataPolicy {
             "app": appSummarySchema
         ]),
         "required": .array([.string("success"), .string("app")])
+    ])
+
+    private static let webhookSignatureSchema: Value = .object([
+        "type": .string("object"),
+        "additionalProperties": .bool(true),
+        "properties": .object([
+            "success": .object(["type": .string("boolean")]),
+            "valid": .object(["type": .string("boolean")]),
+            "algorithm": .object(["type": .string("string")]),
+            "providedSignature": .object(["type": .string("string")]),
+            "computedSignature": .object(["type": .string("string")]),
+            "reason": .object(["type": .string("string")]),
+            "rawPayloadRequired": .object(["type": .string("boolean")])
+        ]),
+        "required": .array([
+            .string("success"),
+            .string("valid"),
+            .string("algorithm"),
+            .string("computedSignature"),
+            .string("rawPayloadRequired")
+        ])
     ])
 }

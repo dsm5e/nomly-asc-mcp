@@ -1,5 +1,5 @@
 import Foundation
 
 enum ServerVersion {
-    static let current = "2.3.0"
+    static let current = "2.4.0"
 }

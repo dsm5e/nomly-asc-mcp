@@ -126,12 +126,88 @@ extension WebhooksWorker {
         )
     }
 
+    func verifySignatureTool() -> Tool {
+        Tool(
+            name: "webhooks_verify_signature",
+            description: "Verify an App Store Connect webhook x-apple-signature HMAC against the exact raw request body. This is local and does not call Apple.",
+            inputSchema: schemaRequiringAnyOf(
+                baseSchema(
+                    properties: [
+                        "secret": stringSchema("Webhook secret configured in App Store Connect"),
+                        "signature": stringSchema("x-apple-signature header value, for example hmacsha256=<hex>"),
+                        "payload": stringSchema("Exact raw UTF-8 request body received by your webhook endpoint"),
+                        "payload_base64": stringSchema("Base64-encoded exact raw request body bytes; use this when byte-for-byte preservation matters")
+                    ],
+                    required: ["secret", "signature"]
+                ),
+                alternatives: [["payload"], ["payload_base64"]]
+            )
+        )
+    }
+
+    func parsePayloadTool() -> Tool {
+        Tool(
+            name: "webhooks_parse_payload",
+            description: "Parse and normalize a raw App Store Connect webhook payload, including nested event payload JSON when Apple sends it as a string. This is local and read-only.",
+            inputSchema: schemaRequiringAnyOf(
+                baseSchema(
+                    properties: [
+                        "payload": stringSchema("Exact raw UTF-8 request body received by your webhook endpoint"),
+                        "payload_base64": stringSchema("Base64-encoded exact raw request body bytes"),
+                        "secret": stringSchema("Optional webhook secret used to verify the signature while parsing"),
+                        "signature": stringSchema("Optional x-apple-signature header value used with secret")
+                    ],
+                    required: []
+                ),
+                alternatives: [["payload"], ["payload_base64"]]
+            )
+        )
+    }
+
+    func triageEventTool() -> Tool {
+        Tool(
+            name: "webhooks_triage_event",
+            description: "Turn a webhook event or failed delivery context into an actionable MCP triage plan with recommended read-only lookup tools.",
+            inputSchema: schemaRequiringAnyOf(
+                baseSchema(
+                    properties: [
+                        "payload": stringSchema("Optional exact raw UTF-8 webhook request body"),
+                        "payload_base64": stringSchema("Optional base64-encoded exact raw request body bytes"),
+                        "event_type": enumSchema("Webhook event type when raw payload is not available", values: ASCWebhookEventTypes.all),
+                        "resource_type": stringSchema("Optional affected App Store Connect resource type from the webhook payload"),
+                        "resource_id": stringSchema("Optional affected App Store Connect resource ID from the webhook payload"),
+                        "delivery_id": stringSchema("Optional webhook delivery ID for redelivery recommendations"),
+                        "webhook_id": stringSchema("Optional webhook configuration ID for ping/delivery recommendations"),
+                        "delivery_state": enumSchema("Optional delivery state from webhooks_list_deliveries", values: ["SUCCEEDED", "FAILED", "PENDING"]),
+                        "http_status_code": integerSchema("Optional receiver HTTP status code from the delivery response"),
+                        "error_message": stringSchema("Optional delivery error message")
+                    ],
+                    required: []
+                ),
+                alternatives: [["event_type"], ["payload"], ["payload_base64"]]
+            )
+        )
+    }
+
     private func baseSchema(properties: [String: Value], required: [String]) -> Value {
         .object([
             "type": .string("object"),
             "properties": .object(properties),
-            "required": .array(required.map(Value.string))
+            "required": .array(required.map(Value.string)),
+            "additionalProperties": .bool(false)
         ])
+    }
+
+    private func schemaRequiringAnyOf(_ schema: Value, alternatives: [[String]]) -> Value {
+        guard case .object(var object) = schema else {
+            return schema
+        }
+        object["anyOf"] = .array(alternatives.map { requiredFields in
+            .object([
+                "required": .array(requiredFields.map(Value.string))
+            ])
+        })
+        return .object(object)
     }
 
     private func stringSchema(_ description: String) -> Value {

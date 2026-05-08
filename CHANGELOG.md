@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-05-08
+
+### Added
+
+- Local webhook receiver helpers: `webhooks_verify_signature`, `webhooks_parse_payload`, and `webhooks_triage_event` for HMAC validation, payload normalization, and actionable event/delivery triage without calling App Store Connect.
+
+### Changed
+
+- README worker counts, webhook tool docs, and coverage matrix now reflect 348 tools across 36 worker domains.
+
 ## [2.3.0] - 2026-05-08
 
 ### Added

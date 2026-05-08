@@ -45,7 +45,7 @@ public func runApplication(options: AppRuntimeOptions = AppRuntimeOptions()) asy
         - auth_* — authentication
         - apps_* — app management and metadata
         - accessibility_* — App Store accessibility declarations by device family
-        - webhooks_* — webhook notifications and delivery diagnostics
+        - webhooks_* — webhook notifications, delivery diagnostics, signature verification, payload parsing, and triage
         - xcode_cloud_* — Xcode Cloud products, workflows, builds, artifacts, issues, test results, and SCM resources
         - builds_* — build management
         - app_versions_* — version lifecycle (create, submit, release)

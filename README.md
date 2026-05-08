@@ -29,7 +29,7 @@
 
 ## Overview
 
-**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **345 tools** across 36 worker domains, enabling you to automate your entire iOS/macOS release workflow through natural language.
+**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **348 tools** across 36 worker domains, enabling you to automate your entire iOS/macOS release workflow through natural language.
 
 ### Key capabilities
 
@@ -43,6 +43,7 @@
 - **Provisioning** — bundle IDs, devices, certificates, profiles, capabilities
 - **Marketing** — screenshots, app previews, custom product pages, A/B testing (PPO), promoted purchases
 - **Accessibility declarations** — manage App Store accessibility support declarations by device family
+- **Webhooks** — manage webhook configurations, inspect delivery diagnostics, verify signatures, parse payloads, and triage events
 - **Analytics & Metrics** — sales/financial reports, analytics reports, performance metrics, diagnostics
 - **Metadata management** — localized descriptions, keywords, What's New across all locales
 - **MCP 2025-11-25 surface** — tool annotations, output schemas for stable tools, structured JSON results, and safe result-size metadata
@@ -53,7 +54,7 @@
 ```bash
 # 1. Install via Mint
 brew install mint
-mint install zelentsov-dev/asc-mcp@v2.3.0
+mint install zelentsov-dev/asc-mcp@v2.4.0
 
 # 2. Add to Claude Code with env vars (simplest setup)
 claude mcp add asc-mcp \
@@ -85,7 +86,7 @@ Or use a JSON config file — see [Configuration](#configuration) below.
 brew install mint
 
 # Install asc-mcp from GitHub
-mint install zelentsov-dev/asc-mcp@v2.3.0
+mint install zelentsov-dev/asc-mcp@v2.4.0
 
 # Register in Claude Code
 claude mcp add asc-mcp -- ~/.mint/bin/asc-mcp
@@ -96,13 +97,13 @@ To install a specific branch or tag:
 ```bash
 mint install zelentsov-dev/asc-mcp@main      # main branch
 mint install zelentsov-dev/asc-mcp@develop    # develop branch
-mint install zelentsov-dev/asc-mcp@v2.3.0     # specific tag
+mint install zelentsov-dev/asc-mcp@v2.4.0     # specific tag
 ```
 
 To update to the latest version:
 
 ```bash
-mint install zelentsov-dev/asc-mcp@v2.3.0 --force
+mint install zelentsov-dev/asc-mcp@v2.4.0 --force
 ```
 
 ### Option B: Build from Source
@@ -362,7 +363,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 }
 ```
 
-> **Note:** Windsurf has a 100-tool limit. The server exposes 345 tools by default, so you must use `--workers` to select a subset. See [Worker Filtering](#worker-filtering) below.
+> **Note:** Windsurf has a 100-tool limit. The server exposes 348 tools by default, so you must use `--workers` to select a subset. See [Worker Filtering](#worker-filtering) below.
 
 </details>
 
@@ -371,7 +372,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ### Worker Filtering
 
-The server exposes **345 tools** across 36 worker domains. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use `--workers` to enable only the workers you need:
+The server exposes **348 tools** across 36 worker domains. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use `--workers` to enable only the workers you need:
 
 ```bash
 # Only load apps, builds, and version lifecycle tools
@@ -397,7 +398,7 @@ asc-mcp --read-only
 asc-mcp --read-only --workers apps,builds,reviews,analytics
 ```
 
-In this mode, read tools such as `*_list`, `*_get`, `*_search`, `*_status`, `auth_*`, analytics, and metrics remain available. Tools that can create, update, upload, submit, release, delete, revoke, clear, cancel, or otherwise mutate App Store Connect are blocked before their worker handler runs. `company_switch` remains available because it changes only the local active company context.
+In this mode, read tools such as `*_list`, `*_get`, `*_search`, `*_status`, `*_verify`, `*_parse`, `*_triage`, `auth_*`, analytics, and metrics remain available. Tools that can create, update, upload, submit, release, delete, revoke, clear, cancel, or otherwise mutate App Store Connect are blocked before their worker handler runs. `company_switch` remains available because it changes only the local active company context.
 
 ### OpenAPI Drift Tooling
 
@@ -425,7 +426,7 @@ The generated report records Apple spec metadata, path and operation counts, dom
 | `auth` | `auth_` | 4 | JWT token tools |
 | `apps` | `apps_` | 9 | App listing, metadata, localizations |
 | `accessibility` | `accessibility_` | 6 | App Store accessibility declarations |
-| `webhooks` | `webhooks_` | 8 | Webhook notifications and deliveries |
+| `webhooks` | `webhooks_` | 11 | Webhook notifications, delivery diagnostics, and receiver helpers |
 | `xcode_cloud` | `xcode_cloud_` | 30 | Xcode Cloud products, workflows, build runs, artifacts, issues, test results, and SCM |
 | `builds` | `builds_` | 4 | Build management |
 | `build_processing` | `builds_get_processing_*`, `builds_update_encryption`, `builds_check_readiness` | 4 | Build states, encryption |
@@ -464,7 +465,7 @@ When connected to an LLM client, tool definitions consume context tokens. Here's
 
 | Configuration | Tools | ~Tokens |
 |---|---:|---:|
-| All workers (default) | 345 | **~39,000** |
+| All workers (default) | 348 | **~39,400** |
 | Release workflow: `apps,builds,versions,reviews` | ~57 | ~7,000 |
 | Monetization: `apps,iap,subscriptions,pricing` | ~78 | ~9,000 |
 | TestFlight: `apps,builds,beta_groups,beta_testers` | ~56 | ~6,000 |
@@ -473,11 +474,11 @@ When connected to an LLM client, tool definitions consume context tokens. Here's
 
 **Heaviest workers:** Xcode Cloud (30 tools), Subscriptions (29 tools), InAppPurchases (24 tools), Provisioning (17 tools), Screenshots (16 tools).
 
-For Claude (200K context) ~39K tokens is about 20% of the window. For clients with smaller context windows, use `--workers` to reduce the footprint.
+For Claude (200K context) ~39.4K tokens is about 20% of the window. For clients with smaller context windows, use `--workers` to reduce the footprint.
 
 ## Available Tools
 
-**345 tools** organized across 36 worker domains (use `--workers` to filter — see [Worker Filtering](#worker-filtering)):
+**348 tools** organized across 36 worker domains (use `--workers` to filter — see [Worker Filtering](#worker-filtering)):
 
 <details>
 <summary><strong>Company Management</strong> — 3 tools</summary>
@@ -534,7 +535,7 @@ For Claude (200K context) ~39K tokens is about 20% of the window. For clients wi
 </details>
 
 <details>
-<summary><strong>Webhook Notifications</strong> — 8 tools</summary>
+<summary><strong>Webhook Notifications</strong> — 11 tools</summary>
 
 | Tool | Description |
 |------|-------------|
@@ -546,6 +547,9 @@ For Claude (200K context) ~39K tokens is about 20% of the window. For clients wi
 | `webhooks_list_deliveries` | List delivery attempts |
 | `webhooks_redeliver` | Redeliver an existing delivery |
 | `webhooks_ping` | Send a test ping |
+| `webhooks_verify_signature` | Verify `x-apple-signature` against the exact raw payload body |
+| `webhooks_parse_payload` | Parse and normalize a raw webhook notification payload |
+| `webhooks_triage_event` | Produce an actionable triage plan for webhook events or delivery failures |
 
 </details>
 

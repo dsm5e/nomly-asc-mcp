@@ -9,7 +9,7 @@ struct ToolMetadataPolicyTests {
     func allToolsReceiveAnnotationsAndMeta() async throws {
         let tools = try await TestFactory.collectAllWorkerTools().map(ToolMetadataPolicy.apply)
 
-        #expect(tools.count == 345)
+        #expect(tools.count == 348)
         for tool in tools {
             #expect(tool.annotations.isEmpty == false)
             #expect(tool.annotations.openWorldHint == true)
@@ -40,6 +40,18 @@ struct ToolMetadataPolicyTests {
         let webhookPing = ToolMetadataPolicy.apply(to: Self.sampleTool(named: "webhooks_ping"))
         #expect(webhookPing.annotations.readOnlyHint == false)
         #expect(webhookPing.annotations.idempotentHint == false)
+
+        let webhookVerify = ToolMetadataPolicy.apply(to: Self.sampleTool(named: "webhooks_verify_signature"))
+        #expect(webhookVerify.annotations.readOnlyHint == true)
+        #expect(webhookVerify.annotations.idempotentHint == true)
+
+        let webhookParse = ToolMetadataPolicy.apply(to: Self.sampleTool(named: "webhooks_parse_payload"))
+        #expect(webhookParse.annotations.readOnlyHint == true)
+        #expect(webhookParse.annotations.idempotentHint == true)
+
+        let webhookTriage = ToolMetadataPolicy.apply(to: Self.sampleTool(named: "webhooks_triage_event"))
+        #expect(webhookTriage.annotations.readOnlyHint == true)
+        #expect(webhookTriage.annotations.idempotentHint == true)
 
         let accessibilityList = ToolMetadataPolicy.apply(to: Self.sampleTool(named: "accessibility_list"))
         #expect(accessibilityList.annotations.readOnlyHint == true)
@@ -87,6 +99,9 @@ struct ToolMetadataPolicyTests {
         #expect(ToolMetadataPolicy.apply(to: Self.sampleTool(named: "auth_token_status")).outputSchema != nil)
         #expect(ToolMetadataPolicy.apply(to: Self.sampleTool(named: "company_list")).outputSchema != nil)
         #expect(ToolMetadataPolicy.apply(to: Self.sampleTool(named: "apps_list")).outputSchema != nil)
+        #expect(ToolMetadataPolicy.apply(to: Self.sampleTool(named: "webhooks_verify_signature")).outputSchema != nil)
+        #expect(ToolMetadataPolicy.apply(to: Self.sampleTool(named: "webhooks_parse_payload")).outputSchema != nil)
+        #expect(ToolMetadataPolicy.apply(to: Self.sampleTool(named: "webhooks_triage_event")).outputSchema != nil)
         #expect(ToolMetadataPolicy.apply(to: Self.sampleTool(named: "builds_list")).outputSchema == nil)
     }
 

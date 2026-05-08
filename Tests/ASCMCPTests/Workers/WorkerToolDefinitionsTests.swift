@@ -43,14 +43,14 @@ struct WorkerToolDefinitionsTests {
         #expect(names.contains("accessibility_list_relationships"))
     }
 
-    // MARK: - WebhooksWorker (8 tools)
+    // MARK: - WebhooksWorker (11 tools)
 
-    @Test("WebhooksWorker returns 8 tools with correct names")
+    @Test("WebhooksWorker returns 11 tools with correct names")
     func webhooksWorkerTools() async throws {
         let client = try await TestFactory.makeHTTPClient()
         let worker = WebhooksWorker(httpClient: client)
         let tools = await worker.getTools()
-        #expect(tools.count == 8)
+        #expect(tools.count == 11)
         let names = Set(tools.map(\.name))
         #expect(names.contains("webhooks_list"))
         #expect(names.contains("webhooks_get"))
@@ -60,6 +60,9 @@ struct WorkerToolDefinitionsTests {
         #expect(names.contains("webhooks_list_deliveries"))
         #expect(names.contains("webhooks_redeliver"))
         #expect(names.contains("webhooks_ping"))
+        #expect(names.contains("webhooks_verify_signature"))
+        #expect(names.contains("webhooks_parse_payload"))
+        #expect(names.contains("webhooks_triage_event"))
     }
 
     // MARK: - XcodeCloudWorker (30 tools)

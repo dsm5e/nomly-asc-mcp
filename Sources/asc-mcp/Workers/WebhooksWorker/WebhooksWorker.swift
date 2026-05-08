@@ -20,7 +20,10 @@ public final class WebhooksWorker: Sendable {
             deleteWebhookTool(),
             listDeliveriesTool(),
             redeliverTool(),
-            pingTool()
+            pingTool(),
+            verifySignatureTool(),
+            parsePayloadTool(),
+            triageEventTool()
         ]
     }
 
@@ -46,6 +49,12 @@ public final class WebhooksWorker: Sendable {
             return try await redeliver(params)
         case "webhooks_ping":
             return try await ping(params)
+        case "webhooks_verify_signature":
+            return try await verifySignature(params)
+        case "webhooks_parse_payload":
+            return try await parsePayload(params)
+        case "webhooks_triage_event":
+            return try await triageEvent(params)
         default:
             throw MCPError.methodNotFound("Unknown tool: \(params.name)")
         }

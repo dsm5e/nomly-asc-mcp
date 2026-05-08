@@ -9,6 +9,7 @@ Source baseline:
 
 Update 2026-05-07: automated OpenAPI coverage tooling is now available. See `ASC-OPENAPI-COVERAGE-GENERATED.md` for the generated Apple 4.3 path/operation matrix.
 Update 2026-05-08: accessibility declaration management is covered by `accessibility_*` tools.
+Update 2026-05-08: local webhook receiver helpers are available for signature verification, payload parsing, and event/delivery triage.
 
 This matrix tracks current `asc-mcp` coverage against the official App Store Connect API documentation. It is intentionally product-oriented: it names what users can do today, what is missing, and which additions should come first.
 
@@ -18,7 +19,7 @@ P0 additions:
 - App Clips, background assets, app tags, routing app coverages, and customer review summaries.
 
 P1 additions:
-- Webhook receiver-side signature verification, event payload decoder, and triage resources/prompts.
+- Hosted webhook receiver templates and reusable triage resources/prompts.
 - Merchant IDs and Pass Type IDs under provisioning.
 - Analytics/customer-review summarization and metric recommendation ergonomics.
 
@@ -29,8 +30,8 @@ P1 additions:
 | Essentials: auth, errors, paging, uploads, rate limits | Partial | P1 | `auth` | API key inventory/revocation helpers |
 | App Store app metadata and release operations | Partial | P0 | `apps`, `accessibility`, `versions`, `app_info`, `pricing`, `app_events`, `screenshots`, `custom_pages`, `ppo`, `promoted`, `review_attachments`, `reviews` | App Clips; background assets; app tags; routing app coverages; customer review summary endpoint |
 | TestFlight builds, testers, groups, and beta app review | Partial | P0 | `builds`, `build_processing`, `build_beta`, `beta_groups`, `beta_feedback`, `beta_testers`, `beta_app`, `pre_release`, `beta_license` | beta recruitment criteria; beta app clip invocation/localization APIs |
-| Webhook notifications | Covered | P2 | `webhooks` | OpenAPI drift checks and receiver-side helper ergonomics |
-| Webhook notification receiver resources | Missing | P1 | none | signature verification helpers; event payload decoder; prompt/resource templates for event triage |
+| Webhook notifications | Covered | P2 | `webhooks` | OpenAPI drift checks and hosted receiver examples |
+| Webhook notification receiver resources | Partial | P1 | `webhooks` | hosted receiver server templates; prompt/resource templates for event triage |
 | In-app purchases, subscriptions, and offers | Covered | P2 | `iap`, `subscriptions`, `offer_codes`, `winback`, `intro_offers`, `promo_offers` | OpenAPI drift checks and schema tightening |
 | Provisioning and identifiers | Partial | P1 | `provisioning` | merchant IDs; pass type IDs |
 | Users, access, and sandbox testers | Partial | P2 | `users`, `sandbox` | API key inventory helpers; API key revocation workflow |
@@ -43,7 +44,7 @@ P1 additions:
 
 1. Add `--read-only` runtime guard so static and live validation can run safely in production-like MCP hosts.
 2. Update `AppsWorker` for app-level `accessibilityUrl` if Apple keeps it as a separate app metadata field outside declaration resources.
-3. Add webhook receiver helpers: signature verification, event payload decoder, and triage prompts/resources.
+3. Add reusable webhook receiver playbooks and optional hosted receiver templates around the new local helper tools.
 4. Add merchant/pass identifiers, App Clips, background assets, Game Center, and alternative distribution as larger domain workers.
 
 ## Safety Notes
