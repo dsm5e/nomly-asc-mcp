@@ -962,6 +962,24 @@ struct ParameterValidationTests {
         #expect(result.isError == true)
     }
 
+    @Test("screenshots_list_sets_ppo without treatment_localization_id returns isError")
+    func screenshotsListSetsPPOMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = ScreenshotsWorker(httpClient: client, uploadService: UploadService())
+        let params = CallTool.Parameters(name: "screenshots_list_sets_ppo", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
+    @Test("screenshots_create_set_ppo without required params returns isError")
+    func screenshotsCreateSetPPOMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = ScreenshotsWorker(httpClient: client, uploadService: UploadService())
+        let params = CallTool.Parameters(name: "screenshots_create_set_ppo", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
     // MARK: - CustomProductPagesWorker
 
     @Test("custom_pages_list without app_id returns isError")

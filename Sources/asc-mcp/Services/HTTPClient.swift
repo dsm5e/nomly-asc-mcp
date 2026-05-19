@@ -9,7 +9,7 @@ public actor HTTPClient {
     private let logger = Logger(subsystem: "com.asc-mcp", category: "HTTPClient")
 
     // Retry configuration
-    private let maxRetries = 3
+    private let maxRetries = 2
     private let retryableStatusCodes = Set([408, 429, 500, 502, 503, 504])
 
     public init(jwtService: JWTService, baseURL: String) async {
@@ -194,10 +194,10 @@ public actor HTTPClient {
             return retryAfter
         }
 
-        // Exponential backoff with jitter
-        let baseDelay = pow(2.0, Double(attempt))
-        let jitter = Double.random(in: 0...1)
-        return min(baseDelay + jitter, 30) // Maximum 30 seconds
+        // Fixed short delay: 3s first retry, 6s second
+        let baseDelay = Double(attempt + 1) * 3.0
+        let jitter = Double.random(in: 0...0.5)
+        return min(baseDelay + jitter, 6) // Maximum 6 seconds
     }
 }
 

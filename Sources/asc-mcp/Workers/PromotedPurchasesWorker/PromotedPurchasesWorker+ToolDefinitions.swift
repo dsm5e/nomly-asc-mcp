@@ -126,7 +126,7 @@ extension PromotedPurchasesWorker {
     func uploadPromotedPurchaseImageTool() -> Tool {
         return Tool(
             name: "promoted_upload_image",
-            description: "Upload a promotional image for a promoted purchase (full cycle: reserve, upload, commit)",
+            description: "Upload a promotional image for a promoted ONE-TIME IAP purchase (full cycle: reserve, upload, commit). NOTE: For SUBSCRIPTIONS use subscriptions_upload_image instead — this tool uses /v1/promotedPurchaseImages which returns 404 for subscriptions. Subscription images use /v1/subscriptionImages and are linked to App Store Promotion automatically.",
             inputSchema: .object([
                 "type": .string("object"),
                 "properties": .object([

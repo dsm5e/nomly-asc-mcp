@@ -359,4 +359,50 @@ extension ScreenshotsWorker {
             ])
         )
     }
+
+    func listScreenshotSetsPPOTool() -> Tool {
+        return Tool(
+            name: "screenshots_list_sets_ppo",
+            description: "List screenshot sets for a PPO (Product Page Optimization) treatment localization. Use this instead of screenshots_list_sets when working with A/B test experiment treatments.",
+            inputSchema: .object([
+                "type": .string("object"),
+                "properties": .object([
+                    "treatment_localization_id": .object([
+                        "type": .string("string"),
+                        "description": .string("PPO experiment treatment localization ID (appStoreVersionExperimentTreatmentLocalization)")
+                    ]),
+                    "limit": .object([
+                        "type": .string("integer"),
+                        "description": .string("Max results (default: 25, max: 200)")
+                    ]),
+                    "next_url": .object([
+                        "type": .string("string"),
+                        "description": .string("Pagination URL from previous response to fetch next page")
+                    ])
+                ]),
+                "required": .array([.string("treatment_localization_id")])
+            ])
+        )
+    }
+
+    func createScreenshotSetPPOTool() -> Tool {
+        return Tool(
+            name: "screenshots_create_set_ppo",
+            description: "Create a screenshot set for a PPO (Product Page Optimization) treatment localization. Use this instead of screenshots_create_set when working with A/B test experiment treatments. Display types: APP_IPHONE_67, APP_IPHONE_65, APP_IPHONE_61, APP_IPHONE_58, APP_IPHONE_55, APP_IPHONE_47, APP_IPHONE_40, APP_IPAD_PRO_3GEN_129, APP_IPAD_PRO_3GEN_11, APP_IPAD_PRO_129, APP_IPAD_105, APP_IPAD_97, APP_DESKTOP, APP_WATCH_ULTRA, APP_WATCH_SERIES_10, APP_WATCH_SERIES_7, APP_WATCH_SERIES_4, APP_WATCH_SERIES_3, APP_APPLE_TV, etc.",
+            inputSchema: .object([
+                "type": .string("object"),
+                "properties": .object([
+                    "treatment_localization_id": .object([
+                        "type": .string("string"),
+                        "description": .string("PPO experiment treatment localization ID (appStoreVersionExperimentTreatmentLocalization)")
+                    ]),
+                    "display_type": .object([
+                        "type": .string("string"),
+                        "description": .string("Screenshot display type (e.g. APP_IPHONE_67, APP_IPAD_PRO_3GEN_129, APP_DESKTOP)")
+                    ])
+                ]),
+                "required": .array([.string("treatment_localization_id"), .string("display_type")])
+            ])
+        )
+    }
 }

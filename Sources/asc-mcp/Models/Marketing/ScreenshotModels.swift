@@ -82,6 +82,29 @@ public struct CreateScreenshotSetRequest: Codable, Sendable {
     }
 }
 
+/// Create screenshot set for a PPO treatment localization request
+public struct CreateScreenshotSetPPORequest: Codable, Sendable {
+    public let data: CreateData
+
+    public struct CreateData: Codable, Sendable {
+        public let type: String = "appScreenshotSets"
+        public let attributes: Attributes
+        public let relationships: Relationships
+    }
+
+    public struct Attributes: Codable, Sendable {
+        public let screenshotDisplayType: String
+    }
+
+    public struct Relationships: Codable, Sendable {
+        public let appStoreVersionExperimentTreatmentLocalization: TreatmentLocalizationRelationship
+    }
+
+    public struct TreatmentLocalizationRelationship: Codable, Sendable {
+        public let data: ASCResourceIdentifier
+    }
+}
+
 /// Create screenshot reservation request
 public struct CreateScreenshotRequest: Codable, Sendable {
     public let data: CreateData

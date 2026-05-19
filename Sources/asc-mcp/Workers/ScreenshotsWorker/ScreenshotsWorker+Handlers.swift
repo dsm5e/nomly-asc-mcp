@@ -799,6 +799,111 @@ extension ScreenshotsWorker {
         }
     }
 
+    /// Lists screenshot sets for a PPO treatment localization
+    /// - Returns: JSON array of screenshot sets with display types
+    func listScreenshotSetsPPO(_ params: CallTool.Parameters) async throws -> CallTool.Result {
+        guard let arguments = params.arguments,
+              let locIdValue = arguments["treatment_localization_id"],
+              let localizationId = locIdValue.stringValue else {
+            return CallTool.Result(
+                content: [.text("Error: Required parameter 'treatment_localization_id' is missing")],
+                isError: true
+            )
+        }
+
+        do {
+            let response: ASCScreenshotSetsResponse
+
+            if let nextUrl = arguments["next_url"]?.stringValue,
+               let parsed = parsePaginationUrl(nextUrl) {
+                response = try await httpClient.get(parsed.path, parameters: parsed.parameters, as: ASCScreenshotSetsResponse.self)
+            } else {
+                var queryParams: [String: String] = [:]
+
+                if let limitValue = arguments["limit"],
+                   let limit = limitValue.intValue {
+                    queryParams["limit"] = String(min(max(limit, 1), 200))
+                } else {
+                    queryParams["limit"] = "25"
+                }
+
+                response = try await httpClient.get(
+                    "/v1/appStoreVersionExperimentTreatmentLocalizations/\(localizationId)/appScreenshotSets",
+                    parameters: queryParams,
+                    as: ASCScreenshotSetsResponse.self
+                )
+            }
+
+            let sets = response.data.map { formatScreenshotSet($0) }
+
+            var result: [String: Any] = [
+                "success": true,
+                "screenshot_sets": sets,
+                "count": sets.count
+            ]
+            if let next = response.links?.next {
+                result["next_url"] = next
+            }
+
+            return CallTool.Result(content: [.text(JSONFormatter.formatJSON(result))])
+
+        } catch {
+            return CallTool.Result(
+                content: [.text("Error: Failed to list screenshot sets for PPO treatment localization: \(error.localizedDescription)")],
+                isError: true
+            )
+        }
+    }
+
+    /// Creates a screenshot set for a PPO treatment localization
+    /// - Returns: JSON with created screenshot set details
+    func createScreenshotSetPPO(_ params: CallTool.Parameters) async throws -> CallTool.Result {
+        guard let arguments = params.arguments,
+              let locIdValue = arguments["treatment_localization_id"],
+              let localizationId = locIdValue.stringValue,
+              let displayTypeValue = arguments["display_type"],
+              let displayType = displayTypeValue.stringValue else {
+            return CallTool.Result(
+                content: [.text("Error: Required parameters: treatment_localization_id, display_type")],
+                isError: true
+            )
+        }
+
+        do {
+            let request = CreateScreenshotSetPPORequest(
+                data: CreateScreenshotSetPPORequest.CreateData(
+                    attributes: CreateScreenshotSetPPORequest.Attributes(
+                        screenshotDisplayType: displayType
+                    ),
+                    relationships: CreateScreenshotSetPPORequest.Relationships(
+                        appStoreVersionExperimentTreatmentLocalization: CreateScreenshotSetPPORequest.TreatmentLocalizationRelationship(
+                            data: ASCResourceIdentifier(type: "appStoreVersionExperimentTreatmentLocalizations", id: localizationId)
+                        )
+                    )
+                )
+            )
+
+            let response: ASCScreenshotSetResponse = try await httpClient.post(
+                "/v1/appScreenshotSets",
+                body: request,
+                as: ASCScreenshotSetResponse.self
+            )
+
+            let result = [
+                "success": true,
+                "screenshot_set": formatScreenshotSet(response.data)
+            ] as [String: Any]
+
+            return CallTool.Result(content: [.text(JSONFormatter.formatJSON(result))])
+
+        } catch {
+            return CallTool.Result(
+                content: [.text("Error: Failed to create screenshot set for PPO treatment localization: \(error.localizedDescription)")],
+                isError: true
+            )
+        }
+    }
+
     // MARK: - Formatting
 
     private func formatScreenshotSet(_ set: ASCScreenshotSet) -> [String: Any] {
