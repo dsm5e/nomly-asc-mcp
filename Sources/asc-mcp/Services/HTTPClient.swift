@@ -3,30 +3,45 @@ import os
 
 /// HTTP client for App Store Connect API using URLSession
 public actor HTTPClient {
-    private let urlSession: URLSession
+    private let transport: any HTTPTransport
     private let jwtService: JWTService
     private let baseURL: String
     private let logger = Logger(subsystem: "com.asc-mcp", category: "HTTPClient")
+    private var lastRateLimitInfo: ASCRateLimitInfo?
 
     // Retry configuration
-    private let maxRetries = 3
+    private let maxRetries: Int
     private let retryableStatusCodes = Set([408, 429, 500, 502, 503, 504])
 
-    public init(jwtService: JWTService, baseURL: String) async {
+    public init(
+        jwtService: JWTService,
+        baseURL: String,
+        transport: (any HTTPTransport)? = nil,
+        maxRetries: Int = 3
+    ) async {
         self.jwtService = jwtService
         self.baseURL = baseURL
+        self.maxRetries = maxRetries
 
-        // Configure URLSession for Swift 6
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 60
         config.waitsForConnectivity = true
-        self.urlSession = URLSession(configuration: config)
+        self.transport = transport ?? URLSessionTransport(configuration: config)
     }
 
-    deinit {
-        // Properly invalidate URLSession to avoid leaks
-        urlSession.invalidateAndCancel()
+    /// Returns the last App Store Connect rate-limit state observed by this client.
+    /// - Returns: Last parsed rate-limit header values, or nil if no rate-limit headers were seen.
+    public func getLastRateLimitInfo() -> ASCRateLimitInfo? {
+        lastRateLimitInfo
+    }
+
+    /// Parses an App Store Connect pagination URL using this client's configured base host.
+    /// - Parameter fullUrl: Absolute pagination URL from an API `links.next` response.
+    /// - Returns: Endpoint path and query parameters, or nil when the URL is invalid or from another host.
+    public func parsePaginationUrl(_ fullUrl: String) -> (path: String, parameters: [String: String])? {
+        let allowedHost = URLComponents(string: baseURL)?.host ?? PaginationURLPolicy.defaultAllowedHost
+        return asc_mcp.parsePaginationUrl(fullUrl, allowedHost: allowedHost)
     }
 
     /// Performs GET request to App Store Connect API
@@ -115,13 +130,10 @@ public actor HTTPClient {
                 logger.debug("[\(method.rawValue)] \(url.absoluteString) - Attempt \(attempt + 1)/\(maxAttempts)")
 
                 let startTime = Date()
-                let (data, response) = try await urlSession.data(for: request)
+                let (data, httpResponse) = try await transport.data(for: request)
                 let duration = Date().timeIntervalSince(startTime)
 
-                // Check HTTP status code
-                guard let httpResponse = response as? HTTPURLResponse else {
-                    throw ASCError.network("Invalid response format")
-                }
+                updateRateLimitInfo(from: httpResponse)
 
                 logger.debug("Response: \(httpResponse.statusCode) in \(String(format: "%.2f", duration))s")
 
@@ -131,7 +143,9 @@ public actor HTTPClient {
                 }
 
                 // Error handling
-                let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+                let apiErrorResponse = decodeAPIErrorResponse(from: data)
+                let errorMessage = apiErrorResponse?.errors.map(\.safeDescription).joined(separator: "; ")
+                    ?? "Unknown App Store Connect API error"
 
                 // Handle 401 Unauthorized: refresh token and retry
                 if httpResponse.statusCode == 401 && attempt < maxAttempts - 1 {
@@ -161,7 +175,10 @@ public actor HTTPClient {
                 }
 
                 // Final error
-                logger.error("HTTP error \(httpResponse.statusCode): \(errorMessage)")
+                logger.error("HTTP error \(httpResponse.statusCode): \(Redactor.redact(errorMessage))")
+                if let apiErrorResponse {
+                    throw ASCError.apiResponse(apiErrorResponse, httpResponse.statusCode)
+                }
                 throw ASCError.api(errorMessage, httpResponse.statusCode)
 
             } catch let error as ASCError {
@@ -190,7 +207,7 @@ public actor HTTPClient {
         // Check Retry-After header
         if let response = response,
            let retryAfterString = response.value(forHTTPHeaderField: "Retry-After"),
-           let retryAfter = Double(retryAfterString) {
+           let retryAfter = Self.parseRetryAfter(retryAfterString) {
             return retryAfter
         }
 
@@ -198,6 +215,70 @@ public actor HTTPClient {
         let baseDelay = pow(2.0, Double(attempt))
         let jitter = Double.random(in: 0...1)
         return min(baseDelay + jitter, 30) // Maximum 30 seconds
+    }
+
+    private func updateRateLimitInfo(from response: HTTPURLResponse) {
+        let appleHeader = response.value(forHTTPHeaderField: "X-Rate-Limit")
+            .flatMap(Self.parseAppleRateLimitHeader)
+        let limit = appleHeader?.limit ?? response.integerHeader("X-Rate-Limit-User-Hour-Limit")
+        let remaining = appleHeader?.remaining ?? response.integerHeader("X-Rate-Limit-User-Hour-Remaining")
+        let retryAfter = response.value(forHTTPHeaderField: "Retry-After")
+            .flatMap { Self.parseRetryAfter($0) }
+
+        guard limit != nil || remaining != nil || retryAfter != nil else {
+            return
+        }
+
+        lastRateLimitInfo = ASCRateLimitInfo(
+            userHourLimit: limit,
+            userHourRemaining: remaining,
+            retryAfterSeconds: retryAfter,
+            observedAt: Date()
+        )
+    }
+
+    private func decodeAPIErrorResponse(from data: Data) -> ASCAPIErrorResponse? {
+        try? JSONDecoder().decode(ASCAPIErrorResponse.self, from: data)
+    }
+
+    private static func parseAppleRateLimitHeader(_ header: String) -> (limit: Int?, remaining: Int?) {
+        var limit: Int?
+        var remaining: Int?
+
+        for part in header.split(separator: ";") {
+            let pair = part.split(separator: ":", maxSplits: 1).map {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            guard pair.count == 2 else { continue }
+
+            switch pair[0] {
+            case "user-hour-lim":
+                limit = Int(pair[1])
+            case "user-hour-rem":
+                remaining = Int(pair[1])
+            default:
+                continue
+            }
+        }
+
+        return (limit, remaining)
+    }
+
+    private static func parseRetryAfter(_ value: String, now: Date = Date()) -> Double? {
+        if let seconds = Double(value.trimmingCharacters(in: .whitespacesAndNewlines)) {
+            return max(0, seconds)
+        }
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
+
+        guard let date = formatter.date(from: value) else {
+            return nil
+        }
+
+        return max(0, date.timeIntervalSince(now))
     }
 }
 
@@ -208,6 +289,12 @@ private enum HTTPMethod: String {
     case PUT = "PUT"
     case PATCH = "PATCH"
     case DELETE = "DELETE"
+}
+
+private extension HTTPURLResponse {
+    func integerHeader(_ name: String) -> Int? {
+        value(forHTTPHeaderField: name).flatMap(Int.init)
+    }
 }
 
 // MARK: - Convenience Methods

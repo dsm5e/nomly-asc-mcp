@@ -1,4 +1,4 @@
-// swift-tools-version: 6.1
+// swift-tools-version: 6.2
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -12,13 +12,16 @@ let package = Package(
         .executable(name: "asc-mcp", targets: ["asc-mcp"])
     ],
     dependencies: [
-        .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", from: "0.3.0")
+        .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", from: "0.12.0")
     ],
     targets: [
         .executableTarget(
             name: "asc-mcp",
             dependencies: [
                 .product(name: "MCP", package: "swift-sdk")
+            ],
+            swiftSettings: [
+                .swiftLanguageMode(.v6)
             ]
         ),
         .testTarget(
@@ -27,7 +30,10 @@ let package = Package(
                 "asc-mcp",
                 .product(name: "MCP", package: "swift-sdk")
             ],
-            resources: [.copy("Fixtures")]
+            resources: [.copy("Fixtures")],
+            swiftSettings: [
+                .swiftLanguageMode(.v6)
+            ]
         ),
     ]
 )
