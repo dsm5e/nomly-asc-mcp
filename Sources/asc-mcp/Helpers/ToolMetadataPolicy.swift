@@ -101,13 +101,21 @@ enum ToolMetadataPolicy {
     }
 
     private static func normalizedInputSchema(for tool: Tool) -> Value {
-        guard case .object(var schema) = tool.inputSchema,
-              case .object(let properties)? = schema["properties"],
-              properties.isEmpty else {
+        guard case .object(var schema) = tool.inputSchema else {
             return tool.inputSchema
         }
 
-        if schema["additionalProperties"] == nil {
+        // The Anthropic API rejects top-level oneOf/anyOf/allOf in a tool
+        // input_schema, even when `type: object` is present. Strip them here as a
+        // safety net so a single malformed tool definition can never again break
+        // every sub-agent request; the real "either/or" constraints are enforced
+        // at runtime inside the tool handlers.
+        schema["anyOf"] = nil
+        schema["oneOf"] = nil
+        schema["allOf"] = nil
+
+        if case .object(let properties)? = schema["properties"], properties.isEmpty,
+           schema["additionalProperties"] == nil {
             schema["additionalProperties"] = .bool(false)
         }
         return .object(schema)

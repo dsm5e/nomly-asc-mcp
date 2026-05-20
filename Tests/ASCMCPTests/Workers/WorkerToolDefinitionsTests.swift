@@ -771,6 +771,62 @@ struct WorkerToolDefinitionsTests {
         }
     }
 
+    @Test("No tool input schema uses top-level oneOf/anyOf/allOf (Anthropic API constraint)")
+    func noTopLevelSchemaComposition() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let rawTools: [Tool] = await {
+            var tools: [Tool] = []
+            tools += await AppsWorker(client: client).getTools()
+            tools += await AccessibilityWorker(httpClient: client).getTools()
+            tools += await WebhooksWorker(httpClient: client).getTools()
+            tools += await BuildsWorker(httpClient: client).getTools()
+            tools += await BuildProcessingWorker(httpClient: client).getTools()
+            tools += await BuildBetaDetailsWorker(httpClient: client).getTools()
+            tools += await AppLifecycleWorker(httpClient: client).getTools()
+            tools += await ReviewsWorker(httpClient: client).getTools()
+            tools += await BetaGroupsWorker(httpClient: client).getTools()
+            tools += await BetaFeedbackWorker(httpClient: client).getTools()
+            tools += await InAppPurchasesWorker(httpClient: client, uploadService: UploadService()).getTools()
+            tools += await ProvisioningWorker(httpClient: client).getTools()
+            tools += await BetaTestersWorker(httpClient: client).getTools()
+            tools += await AppInfoWorker(httpClient: client).getTools()
+            tools += await PricingWorker(httpClient: client).getTools()
+            tools += await UsersWorker(httpClient: client).getTools()
+            tools += await AppEventsWorker(httpClient: client).getTools()
+            tools += await AnalyticsWorker(httpClient: client).getTools()
+            tools += await SubscriptionsWorker(httpClient: client, uploadService: UploadService()).getTools()
+            tools += await OfferCodesWorker(httpClient: client).getTools()
+            tools += await WinBackOffersWorker(httpClient: client).getTools()
+            tools += await IntroductoryOffersWorker(httpClient: client).getTools()
+            tools += await PromotionalOffersWorker(httpClient: client).getTools()
+            tools += await SandboxTestersWorker(httpClient: client).getTools()
+            tools += await BetaAppWorker(httpClient: client).getTools()
+            tools += await PreReleaseVersionsWorker(httpClient: client).getTools()
+            tools += await BetaLicenseAgreementsWorker(httpClient: client).getTools()
+            tools += await ScreenshotsWorker(httpClient: client, uploadService: UploadService()).getTools()
+            tools += await CustomProductPagesWorker(httpClient: client).getTools()
+            tools += await ProductPageOptimizationWorker(httpClient: client).getTools()
+            tools += await PromotedPurchasesWorker(httpClient: client, uploadService: UploadService()).getTools()
+            tools += await MetricsWorker(httpClient: client).getTools()
+            tools += await ReviewAttachmentsWorker(httpClient: client, uploadService: UploadService()).getTools()
+            return tools
+        }()
+
+        // Validate the schema that is actually sent to the API (post-policy),
+        // so this also covers the central strip in ToolMetadataPolicy.
+        let allTools = rawTools.map { ToolMetadataPolicy.apply(to: $0) }
+        for tool in allTools {
+            guard case .object(let schema) = tool.inputSchema else {
+                Issue.record("Tool '\(tool.name)' input schema is not a JSON object")
+                continue
+            }
+            #expect(schema["type"]?.stringValue == "object", "Tool '\(tool.name)' root schema type must be object")
+            #expect(schema["anyOf"] == nil, "Tool '\(tool.name)' has top-level anyOf (Anthropic API rejects it)")
+            #expect(schema["oneOf"] == nil, "Tool '\(tool.name)' has top-level oneOf (Anthropic API rejects it)")
+            #expect(schema["allOf"] == nil, "Tool '\(tool.name)' has top-level allOf (Anthropic API rejects it)")
+        }
+    }
+
     // MARK: - ReviewAttachmentsWorker (4 tools)
 
     @Test("ReviewAttachmentsWorker returns 4 tools with correct names")
