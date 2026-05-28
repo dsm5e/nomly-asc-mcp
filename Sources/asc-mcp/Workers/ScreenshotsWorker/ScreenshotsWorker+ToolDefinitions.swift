@@ -322,6 +322,34 @@ extension ScreenshotsWorker {
         )
     }
 
+    func replaceScreenshotSetTool() -> Tool {
+        return Tool(
+            name: "screenshots_replace_set",
+            description: "Replace an entire screenshot set for a version localization in ONE call: deletes the existing set of the given display_type (if present), creates a fresh set, then uploads the files in array order (reserve→upload→commit each) and pins their display order. App preview / video sets are a separate relationship and are NEVER touched — ideal for bulk-refreshing a locale's screenshots without disturbing its app preview videos.",
+            inputSchema: .object([
+                "type": .string("object"),
+                "properties": .object([
+                    "localization_id": .object([
+                        "type": .string("string"),
+                        "description": .string("App Store version localization ID")
+                    ]),
+                    "display_type": .object([
+                        "type": .string("string"),
+                        "description": .string("Screenshot display type (e.g. APP_IPHONE_67 for 1290x2796, APP_IPAD_PRO_3GEN_129 for 2048x2732)")
+                    ]),
+                    "file_paths": .object([
+                        "type": .string("array"),
+                        "description": .string("Absolute paths to screenshot files on disk, in the order they should appear"),
+                        "items": .object([
+                            "type": .string("string")
+                        ])
+                    ])
+                ]),
+                "required": .array([.string("localization_id"), .string("display_type"), .string("file_paths")])
+            ])
+        )
+    }
+
     func updatePreviewTool() -> Tool {
         return Tool(
             name: "screenshots_update_preview",

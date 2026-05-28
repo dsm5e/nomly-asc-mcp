@@ -944,6 +944,15 @@ struct ParameterValidationTests {
         #expect(result.isError == true)
     }
 
+    @Test("screenshots_replace_set without required params returns isError")
+    func screenshotsReplaceSetMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = ScreenshotsWorker(httpClient: client, uploadService: UploadService())
+        let params = CallTool.Parameters(name: "screenshots_replace_set", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
     @Test("screenshots_delete without screenshot_id returns isError")
     func screenshotsDeleteMissing() async throws {
         let client = try await TestFactory.makeHTTPClient()

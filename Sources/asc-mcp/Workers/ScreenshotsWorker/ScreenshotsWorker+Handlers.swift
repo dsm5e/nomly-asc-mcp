@@ -367,6 +367,161 @@ extension ScreenshotsWorker {
         return CallTool.Result(content: [.text(JSONFormatter.formatJSON(response))])
     }
 
+    /// Replaces an entire screenshot set for a version localization in one call.
+    /// Finds the existing set of the given display type (if any) and deletes it,
+    /// creates a fresh set, then uploads the files in array order
+    /// (reserve → upload → commit each) and pins their order. App preview (video)
+    /// sets live in a separate relationship and are never touched.
+    /// - Returns: JSON with the deleted old set id (if any), the new set id, and per-file upload results
+    func replaceScreenshotSet(_ params: CallTool.Parameters) async throws -> CallTool.Result {
+        guard let arguments = params.arguments,
+              let localizationId = arguments["localization_id"]?.stringValue,
+              let displayType = arguments["display_type"]?.stringValue,
+              let filePaths = arguments["file_paths"]?.arrayValue?.compactMap({ $0.stringValue }),
+              !filePaths.isEmpty else {
+            return CallTool.Result(
+                content: [.text("Error: Required parameters: localization_id, display_type, file_paths (non-empty array)")],
+                isError: true
+            )
+        }
+
+        do {
+            // Step 1: Find an existing screenshot set of this display type and delete it.
+            // Only appScreenshotSets are queried/deleted — appPreviewSets (videos) are a
+            // separate relationship and are never affected.
+            let existing = try await httpClient.get(
+                "/v1/appStoreVersionLocalizations/\(localizationId)/appScreenshotSets",
+                parameters: ["limit": "200"],
+                as: ASCScreenshotSetsResponse.self
+            )
+            var deletedSetId: String?
+            if let match = existing.data.first(where: { $0.attributes?.screenshotDisplayType == displayType }) {
+                _ = try await httpClient.delete("/v1/appScreenshotSets/\(match.id)")
+                deletedSetId = match.id
+            }
+
+            // Step 2: Create a fresh set of the requested display type.
+            let createSetRequest = CreateScreenshotSetRequest(
+                data: CreateScreenshotSetRequest.CreateData(
+                    attributes: CreateScreenshotSetRequest.Attributes(
+                        screenshotDisplayType: displayType
+                    ),
+                    relationships: CreateScreenshotSetRequest.Relationships(
+                        appStoreVersionLocalization: CreateScreenshotSetRequest.LocalizationRelationship(
+                            data: ASCResourceIdentifier(type: "appStoreVersionLocalizations", id: localizationId)
+                        )
+                    )
+                )
+            )
+            let setResponse: ASCScreenshotSetResponse = try await httpClient.post(
+                "/v1/appScreenshotSets",
+                body: createSetRequest,
+                as: ASCScreenshotSetResponse.self
+            )
+            let setId = setResponse.data.id
+
+            // Step 3: Upload each file in order (reserve → upload chunks → commit).
+            let encoder = JSONEncoder()
+            var results: [[String: Any]] = []
+            var uploadedIds: [String] = []
+            var successCount = 0
+            var failCount = 0
+
+            for filePath in filePaths {
+                do {
+                    let fileSize = try await uploadService.fileSize(at: filePath)
+                    let fileName = await uploadService.fileName(at: filePath)
+
+                    let createRequest = CreateScreenshotRequest(
+                        data: CreateScreenshotRequest.CreateData(
+                            attributes: CreateScreenshotRequest.Attributes(
+                                fileName: fileName,
+                                fileSize: fileSize
+                            ),
+                            relationships: CreateScreenshotRequest.Relationships(
+                                appScreenshotSet: CreateScreenshotRequest.ScreenshotSetRelationship(
+                                    data: ASCResourceIdentifier(type: "appScreenshotSets", id: setId)
+                                )
+                            )
+                        )
+                    )
+                    let reserveBody = try encoder.encode(createRequest)
+                    let reserveData = try await httpClient.post("/v1/appScreenshots", body: reserveBody)
+                    let reserveResponse = try JSONDecoder().decode(ASCScreenshotResponse.self, from: reserveData)
+
+                    let screenshotId = reserveResponse.data.id
+                    guard let uploadOperations = reserveResponse.data.attributes?.uploadOperations, !uploadOperations.isEmpty else {
+                        results.append(["file": fileName, "success": false, "error": "No upload operations returned"])
+                        failCount += 1
+                        continue
+                    }
+
+                    let md5 = try await uploadService.uploadFile(filePath: filePath, uploadOperations: uploadOperations)
+
+                    let commitRequest = CommitScreenshotRequest(
+                        data: CommitScreenshotRequest.CommitData(
+                            id: screenshotId,
+                            attributes: CommitScreenshotRequest.Attributes(
+                                sourceFileChecksum: md5,
+                                uploaded: true
+                            )
+                        )
+                    )
+                    let commitBody = try encoder.encode(commitRequest)
+                    let commitData = try await httpClient.patch("/v1/appScreenshots/\(screenshotId)", body: commitBody)
+                    let commitResponse = try JSONDecoder().decode(ASCScreenshotResponse.self, from: commitData)
+
+                    uploadedIds.append(commitResponse.data.id)
+                    results.append([
+                        "file": fileName,
+                        "success": true,
+                        "screenshot_id": commitResponse.data.id,
+                        "state": commitResponse.data.attributes?.assetDeliveryState?.state ?? "unknown"
+                    ] as [String: Any])
+                    successCount += 1
+
+                } catch {
+                    let fileName = URL(fileURLWithPath: filePath).lastPathComponent
+                    results.append(["file": fileName, "success": false, "error": error.localizedDescription] as [String: Any])
+                    failCount += 1
+                }
+            }
+
+            // Step 4: Pin display order to the upload order. ASC keeps creation order,
+            // but an explicit reorder guarantees it; best-effort, never fails the call.
+            if uploadedIds.count > 1 {
+                let resourceIds = uploadedIds.map { ASCResourceIdentifier(type: "appScreenshots", id: $0) }
+                let reorderRequest = ReorderScreenshotsRequest(data: resourceIds)
+                if let reorderBody = try? encoder.encode(reorderRequest) {
+                    _ = try? await httpClient.patch(
+                        "/v1/appScreenshotSets/\(setId)/relationships/appScreenshots",
+                        body: reorderBody
+                    )
+                }
+            }
+
+            let response: [String: Any] = [
+                "success": failCount == 0,
+                "localization_id": localizationId,
+                "display_type": displayType,
+                "deleted_set_id": deletedSetId ?? "none",
+                "new_set_id": setId,
+                "total": filePaths.count,
+                "uploaded": successCount,
+                "failed": failCount,
+                "results": results
+            ]
+
+            return CallTool.Result(content: [.text(JSONFormatter.formatJSON(response))])
+
+        } catch {
+            return CallTool.Result(
+                content: [.text("Error: Failed to replace screenshot set: \(error.localizedDescription)")],
+                isError: true
+            )
+        }
+    }
+
     /// Gets details of a specific screenshot
     /// - Returns: JSON with screenshot details
     func getScreenshot(_ params: CallTool.Parameters) async throws -> CallTool.Result {

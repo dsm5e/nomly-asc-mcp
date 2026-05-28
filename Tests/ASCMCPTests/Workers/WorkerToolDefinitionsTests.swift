@@ -480,14 +480,14 @@ struct WorkerToolDefinitionsTests {
         #expect(names.contains("beta_license_update"))
     }
 
-    // MARK: - ScreenshotsWorker (19 tools)
+    // MARK: - ScreenshotsWorker (20 tools)
 
-    @Test("ScreenshotsWorker returns 19 tools with correct names")
+    @Test("ScreenshotsWorker returns 20 tools with correct names")
     func screenshotsWorkerTools() async throws {
         let client = try await TestFactory.makeHTTPClient()
         let worker = ScreenshotsWorker(httpClient: client, uploadService: UploadService())
         let tools = await worker.getTools()
-        #expect(tools.count == 19)
+        #expect(tools.count == 20)
         let names = Set(tools.map(\.name))
         #expect(names.contains("screenshots_list_sets"))
         #expect(names.contains("screenshots_create_set"))
@@ -505,6 +505,7 @@ struct WorkerToolDefinitionsTests {
         #expect(names.contains("screenshots_list_previews"))
         #expect(names.contains("screenshots_delete_preview"))
         #expect(names.contains("screenshots_upload_batch"))
+        #expect(names.contains("screenshots_replace_set"))
         #expect(names.contains("screenshots_update_preview"))
         #expect(names.contains("screenshots_list_sets_ppo"))
         #expect(names.contains("screenshots_create_set_ppo"))

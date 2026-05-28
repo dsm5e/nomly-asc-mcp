@@ -30,6 +30,7 @@ public final class ScreenshotsWorker: Sendable {
             listPreviewsTool(),
             deletePreviewTool(),
             uploadScreenshotBatchTool(),
+            replaceScreenshotSetTool(),
             updatePreviewTool(),
             listScreenshotSetsPPOTool(),
             createScreenshotSetPPOTool()
@@ -71,6 +72,8 @@ public final class ScreenshotsWorker: Sendable {
             return try await deletePreview(params)
         case "screenshots_upload_batch":
             return try await uploadScreenshotBatch(params)
+        case "screenshots_replace_set":
+            return try await replaceScreenshotSet(params)
         case "screenshots_update_preview":
             return try await updatePreview(params)
         case "screenshots_list_sets_ppo":
