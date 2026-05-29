@@ -60,11 +60,7 @@ public func runApplication(options: AppRuntimeOptions = AppRuntimeOptions()) asy
         - users_* — team members and roles
         - app_events_* — in-app events
         - analytics_* — sales and financial reports
-        - subscriptions_* -- subscription management (CRUD, localizations, prices, groups)
-        - offer_codes_* -- subscription offer codes
-        - winback_* -- win-back offers for subscriptions
-        - intro_offers_* -- subscription introductory offers (free trials, pay-as-you-go, pay-up-front)
-        - promo_offers_* -- subscription promotional offers (discounts for current/former subscribers)
+        - subscriptions_* -- subscription and offer management (groups, products, prices, availability, intro/promotional/offer-code/win-back offers)
         - sandbox_* -- sandbox testers management (list, update, clear purchase history)
         - beta_app_* -- beta app localizations, review submissions, review details
         - pre_release_* -- pre-release versions (list, get, builds)

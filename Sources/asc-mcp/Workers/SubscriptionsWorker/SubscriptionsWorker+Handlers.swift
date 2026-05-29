@@ -423,120 +423,13 @@ extension SubscriptionsWorker {
     /// Lists prices for a subscription
     /// - Returns: JSON array of prices
     func listSubscriptionPrices(_ params: CallTool.Parameters) async throws -> CallTool.Result {
-        guard let arguments = params.arguments,
-              let subscriptionId = arguments["subscription_id"]?.stringValue else {
-            return CallTool.Result(
-                content: [MCPContent.text("Error: Required parameter 'subscription_id' is missing")],
-                isError: true
-            )
-        }
-
-        do {
-            let response: ASCSubscriptionPricesResponse
-
-            if let nextUrl = arguments["next_url"]?.stringValue,
-               let parsed = await httpClient.parsePaginationUrl(nextUrl) {
-                response = try await httpClient.get(parsed.path, parameters: parsed.parameters, as: ASCSubscriptionPricesResponse.self)
-            } else {
-                var queryParams: [String: String] = [
-                    "include": "subscriptionPricePoint",
-                    "fields[subscriptionPricePoints]": "customerPrice,proceeds"
-                ]
-
-                if let limit = arguments["limit"]?.intValue {
-                    queryParams["limit"] = String(min(max(limit, 1), 200))
-                } else {
-                    queryParams["limit"] = "25"
-                }
-
-                response = try await httpClient.get(
-                    "/v1/subscriptions/\(subscriptionId)/prices",
-                    parameters: queryParams,
-                    as: ASCSubscriptionPricesResponse.self
-                )
-            }
-
-            // Build price point lookup from included resources
-            var pricePointMap: [String: ASCSubscriptionPricePoint] = [:]
-            if let included = response.included {
-                for point in included {
-                    pricePointMap[point.id] = point
-                }
-            }
-
-            let prices = response.data.map { formatPrice($0, pricePointMap: pricePointMap) }
-
-            var result: [String: Any] = [
-                "success": true,
-                "prices": prices,
-                "count": prices.count
-            ]
-            if let next = response.links?.next {
-                result["next_url"] = next
-            }
-
-            return MCPResult.jsonObject(result)
-
-        } catch {
-            return CallTool.Result(
-                content: [MCPContent.text("Error: Failed to list subscription prices: \(error.localizedDescription)")],
-                isError: true
-            )
-        }
+        try await listSubscriptionPricesV3(params)
     }
 
     /// Lists available price points for a subscription
     /// - Returns: JSON array of price points with customer price and proceeds
     func listSubscriptionPricePoints(_ params: CallTool.Parameters) async throws -> CallTool.Result {
-        guard let arguments = params.arguments,
-              let subscriptionId = arguments["subscription_id"]?.stringValue else {
-            return CallTool.Result(
-                content: [MCPContent.text("Error: Required parameter 'subscription_id' is missing")],
-                isError: true
-            )
-        }
-
-        do {
-            let response: ASCSubscriptionPricePointsResponse
-
-            if let nextUrl = arguments["next_url"]?.stringValue,
-               let parsed = await httpClient.parsePaginationUrl(nextUrl) {
-                response = try await httpClient.get(parsed.path, parameters: parsed.parameters, as: ASCSubscriptionPricePointsResponse.self)
-            } else {
-                var queryParams: [String: String] = [:]
-
-                if let limit = arguments["limit"]?.intValue {
-                    queryParams["limit"] = String(min(max(limit, 1), 200))
-                } else {
-                    queryParams["limit"] = "25"
-                }
-
-                response = try await httpClient.get(
-                    "/v1/subscriptions/\(subscriptionId)/pricePoints",
-                    parameters: queryParams,
-                    as: ASCSubscriptionPricePointsResponse.self
-                )
-            }
-
-            let pricePoints = response.data.map { formatPricePoint($0) }
-
-            var result: [String: Any] = [
-                "success": true,
-                "price_points": pricePoints,
-                "count": pricePoints.count
-            ]
-            if let next = response.links?.next {
-                result["next_url"] = next
-            }
-
-            return MCPResult.jsonObject(result)
-
-        } catch {
-            return CallTool.Result(
-                content: [MCPContent.text("Error: Failed to list subscription price points: \(error.localizedDescription)")],
-                isError: true
-            )
-        }
+        try await listSubscriptionPricePointsV3(params)
     }
 
     /// Creates a new subscription group for an app

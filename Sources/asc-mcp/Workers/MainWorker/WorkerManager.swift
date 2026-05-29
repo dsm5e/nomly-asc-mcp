@@ -72,10 +72,6 @@ public actor WorkerManager {
     private var appEventsWorker: AppEventsWorker
     private var analyticsWorker: AnalyticsWorker
     private var subscriptionsWorker: SubscriptionsWorker
-    private var offerCodesWorker: OfferCodesWorker
-    private var winBackOffersWorker: WinBackOffersWorker
-    private var introductoryOffersWorker: IntroductoryOffersWorker
-    private var promotionalOffersWorker: PromotionalOffersWorker
     private var sandboxTestersWorker: SandboxTestersWorker
     private var betaAppWorker: BetaAppWorker
     private var preReleaseVersionsWorker: PreReleaseVersionsWorker
@@ -122,10 +118,6 @@ public actor WorkerManager {
             companiesManager: dependencies.companiesWorker.manager
         )
         self.subscriptionsWorker = await SubscriptionsWorker(httpClient: dependencies.httpClient, uploadService: self.uploadService)
-        self.offerCodesWorker = await OfferCodesWorker(httpClient: dependencies.httpClient)
-        self.winBackOffersWorker = await WinBackOffersWorker(httpClient: dependencies.httpClient)
-        self.introductoryOffersWorker = await IntroductoryOffersWorker(httpClient: dependencies.httpClient)
-        self.promotionalOffersWorker = await PromotionalOffersWorker(httpClient: dependencies.httpClient)
         self.sandboxTestersWorker = await SandboxTestersWorker(httpClient: dependencies.httpClient)
         self.betaAppWorker = await BetaAppWorker(httpClient: dependencies.httpClient)
         self.preReleaseVersionsWorker = await PreReleaseVersionsWorker(httpClient: dependencies.httpClient)
@@ -254,10 +246,6 @@ public actor WorkerManager {
             WorkerDescriptor(key: "app_events", enabledKeys: ["app_events"], prefixes: ["app_events_"], getTools: { await self.getAppEventsTools() }, handle: { try await self.appEventsWorker.handleTool($0) }),
             WorkerDescriptor(key: "analytics", enabledKeys: ["analytics"], prefixes: ["analytics_"], getTools: { await self.getAnalyticsTools() }, handle: { try await self.analyticsWorker.handleTool($0) }),
             WorkerDescriptor(key: "subscriptions", enabledKeys: ["subscriptions"], prefixes: ["subscriptions_"], getTools: { await self.getSubscriptionsTools() }, handle: { try await self.subscriptionsWorker.handleTool($0) }),
-            WorkerDescriptor(key: "offer_codes", enabledKeys: ["offer_codes"], prefixes: ["offer_codes_"], getTools: { await self.getOfferCodesTools() }, handle: { try await self.offerCodesWorker.handleTool($0) }),
-            WorkerDescriptor(key: "winback", enabledKeys: ["winback"], prefixes: ["winback_"], getTools: { await self.getWinBackOffersTools() }, handle: { try await self.winBackOffersWorker.handleTool($0) }),
-            WorkerDescriptor(key: "intro_offers", enabledKeys: ["intro_offers"], prefixes: ["intro_offers_"], getTools: { await self.getIntroductoryOffersTools() }, handle: { try await self.introductoryOffersWorker.handleTool($0) }),
-            WorkerDescriptor(key: "promo_offers", enabledKeys: ["promo_offers"], prefixes: ["promo_offers_"], getTools: { await self.getPromotionalOffersTools() }, handle: { try await self.promotionalOffersWorker.handleTool($0) }),
             WorkerDescriptor(key: "sandbox", enabledKeys: ["sandbox"], prefixes: ["sandbox_"], getTools: { await self.getSandboxTestersTools() }, handle: { try await self.sandboxTestersWorker.handleTool($0) }),
             WorkerDescriptor(key: "beta_app", enabledKeys: ["beta_app"], prefixes: ["beta_app_"], getTools: { await self.getBetaAppTools() }, handle: { try await self.betaAppWorker.handleTool($0) }),
             WorkerDescriptor(key: "pre_release", enabledKeys: ["pre_release"], prefixes: ["pre_release_"], getTools: { await self.getPreReleaseVersionsTools() }, handle: { try await self.preReleaseVersionsWorker.handleTool($0) }),
@@ -390,10 +378,6 @@ public actor WorkerManager {
             companiesManager: dependencies.companiesWorker.manager
         )
         self.subscriptionsWorker = await SubscriptionsWorker(httpClient: dependencies.httpClient, uploadService: self.uploadService)
-        self.offerCodesWorker = await OfferCodesWorker(httpClient: dependencies.httpClient)
-        self.winBackOffersWorker = await WinBackOffersWorker(httpClient: dependencies.httpClient)
-        self.introductoryOffersWorker = await IntroductoryOffersWorker(httpClient: dependencies.httpClient)
-        self.promotionalOffersWorker = await PromotionalOffersWorker(httpClient: dependencies.httpClient)
         self.sandboxTestersWorker = await SandboxTestersWorker(httpClient: dependencies.httpClient)
         self.betaAppWorker = await BetaAppWorker(httpClient: dependencies.httpClient)
         self.preReleaseVersionsWorker = await PreReleaseVersionsWorker(httpClient: dependencies.httpClient)
@@ -544,22 +528,6 @@ public actor WorkerManager {
 
     private func getSubscriptionsTools() async -> [Tool] {
         return await subscriptionsWorker.getTools()
-    }
-
-    private func getOfferCodesTools() async -> [Tool] {
-        return await offerCodesWorker.getTools()
-    }
-
-    private func getWinBackOffersTools() async -> [Tool] {
-        return await winBackOffersWorker.getTools()
-    }
-
-    private func getIntroductoryOffersTools() async -> [Tool] {
-        return await introductoryOffersWorker.getTools()
-    }
-
-    private func getPromotionalOffersTools() async -> [Tool] {
-        return await promotionalOffersWorker.getTools()
     }
 
     private func getSandboxTestersTools() async -> [Tool] {

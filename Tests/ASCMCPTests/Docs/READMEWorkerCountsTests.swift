@@ -12,10 +12,10 @@ struct READMEWorkerCountsTests {
         let snapshots = try await TestFactory.collectWorkerToolSnapshots()
         let totalTools = snapshots.reduce(0) { $0 + $1.count }
 
-        #expect(totalTools == 348)
-        #expect(snapshots.count == 36)
+        #expect(totalTools == 389)
+        #expect(snapshots.count == 32)
         #expect(readme.contains("**\(totalTools) tools**"))
-        #expect(readme.contains("36 worker domains"))
+        #expect(readme.contains("32 worker domains"))
 
         let lines = readme.components(separatedBy: .newlines)
         for snapshot in snapshots {
