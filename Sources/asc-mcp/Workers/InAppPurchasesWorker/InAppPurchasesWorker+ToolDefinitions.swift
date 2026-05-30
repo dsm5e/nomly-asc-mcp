@@ -303,13 +303,17 @@ extension InAppPurchasesWorker {
                         "type": .string("string"),
                         "description": .string("In-app purchase ID")
                     ]),
+                    "territory_id": .object([
+                        "type": .string("string"),
+                        "description": .string("Filter by territory ID (e.g. USA, GBR)")
+                    ]),
                     "territory": .object([
                         "type": .string("string"),
-                        "description": .string("Filter by territory code (e.g. USA, GBR)")
+                        "description": .string("Deprecated alias for territory_id")
                     ]),
                     "limit": .object([
                         "type": .string("integer"),
-                        "description": .string("Max results (default: 50, max: 200)")
+                        "description": .string("Max results (default: 50, max: 8000)")
                     ]),
                     "next_url": .object([
                         "type": .string("string"),
@@ -419,12 +423,16 @@ extension InAppPurchasesWorker {
                         "type": .string("string"),
                         "description": .string("In-app purchase availability ID")
                     ]),
+                    "iap_id": .object([
+                        "type": .string("string"),
+                        "description": .string("In-app purchase ID; preferred for direct availability reads")
+                    ]),
                     "include_territories": .object([
                         "type": .string("boolean"),
                         "description": .string("Include available territories (default: true)")
                     ])
                 ]),
-                "required": .array([.string("availability_id")])
+                "required": .array([])
             ])
         )
     }

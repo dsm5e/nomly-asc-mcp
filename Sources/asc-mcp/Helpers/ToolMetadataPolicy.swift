@@ -61,6 +61,9 @@ enum ToolMetadataPolicy {
         "_search",
         "_find",
         "_stats",
+        "_summary",
+        "_inventory",
+        "_prepare",
         "_status",
         "_check",
         "_current",
@@ -70,6 +73,12 @@ enum ToolMetadataPolicy {
     ]
 
     private static let destructiveMarkers = [
+        "_create",
+        "_update",
+        "_set",
+        "_upload",
+        "_generate",
+        "_deactivate",
         "_delete",
         "_remove",
         "_revoke",

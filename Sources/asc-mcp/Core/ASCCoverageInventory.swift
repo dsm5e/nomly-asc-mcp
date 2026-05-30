@@ -158,19 +158,20 @@ enum ASCCoverageInventory {
             appleDocumentationURL: "https://developer.apple.com/documentation/appstoreconnectapi/app-store",
             status: .covered,
             priority: .p2,
-            workerKeys: ["iap", "subscriptions", "offer_codes", "winback", "intro_offers", "promo_offers"],
+            workerKeys: ["iap", "subscriptions"],
             coveredCapabilities: [
                 "IAP and subscription CRUD",
                 "subscription groups and localizations",
-                "prices and availability",
-                "offer codes",
+                "territory-aware prices, price points, equalizations, and availability",
+                "IAP and subscription offer codes",
                 "win-back offers",
                 "introductory offers",
                 "promotional offers",
+                "AI-friendly product inventory and pricing summaries",
                 "review screenshot and image uploads"
             ],
             missingCapabilities: [],
-            notes: "Coverage is broad enough for production workflows; future work is mostly schema tightening and OpenAPI drift checks."
+            notes: "v3 consolidates subscription offers under subscriptions_* and keeps one-time IAP product management under iap_*."
         ),
         ASCCoverageArea(
             name: "Provisioning and identifiers",

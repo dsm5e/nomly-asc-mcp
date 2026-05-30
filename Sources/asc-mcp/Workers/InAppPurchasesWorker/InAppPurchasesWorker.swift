@@ -38,7 +38,7 @@ public final class InAppPurchasesWorker: Sendable {
             getIAPImageTool(),
             deleteIAPImageTool(),
             listIAPImagesTool()
-        ]
+        ] + v3CommerceTools()
     }
 
     /// Handle tool calls (for WorkerManager routing)
@@ -69,11 +69,21 @@ public final class InAppPurchasesWorker: Sendable {
         case "iap_get_subscription_group":
             return try await getSubscriptionGroup(params)
         case "iap_list_price_points":
-            return try await listIAPPricePoints(params)
+            return try await listIAPPricePointsV3(params)
         case "iap_get_price_schedule":
             return try await getIAPPriceSchedule(params)
         case "iap_set_price_schedule":
             return try await setIAPPriceSchedule(params)
+        case "iap_list_price_point_equalizations":
+            return try await listIAPPricePointEqualizations(params)
+        case "iap_pricing_summary":
+            return try await getIAPPricingSummary(params)
+        case "iap_prepare_offer_prices":
+            return try await prepareIAPOfferPrices(params)
+        case "iap_inventory":
+            return try await getIAPInventory(params)
+        case "iap_get_promoted_purchase":
+            return try await getIAPPromotedPurchase(params)
         case "iap_get_review_screenshot":
             return try await getIAPReviewScreenshot(params)
         case "iap_upload_review_screenshot":
@@ -83,7 +93,9 @@ public final class InAppPurchasesWorker: Sendable {
         case "iap_set_availability":
             return try await setIAPAvailability(params)
         case "iap_get_availability":
-            return try await getIAPAvailability(params)
+            return try await getIAPAvailabilityV3(params)
+        case "iap_list_available_territories":
+            return try await listIAPAvailableTerritories(params)
         case "iap_upload_image":
             return try await uploadIAPImage(params)
         case "iap_get_image":
@@ -92,6 +104,38 @@ public final class InAppPurchasesWorker: Sendable {
             return try await deleteIAPImage(params)
         case "iap_list_images":
             return try await listIAPImages(params)
+        case "iap_list_offer_codes":
+            return try await listIAPOfferCodes(params)
+        case "iap_get_offer_code":
+            return try await getIAPOfferCode(params)
+        case "iap_create_offer_code":
+            return try await createIAPOfferCode(params)
+        case "iap_update_offer_code":
+            return try await updateIAPOfferCode(params)
+        case "iap_deactivate_offer_code":
+            return try await deactivateIAPOfferCode(params)
+        case "iap_list_offer_code_prices":
+            return try await listIAPOfferCodePrices(params)
+        case "iap_generate_one_time_codes":
+            return try await generateIAPOneTimeCodes(params)
+        case "iap_list_one_time_codes":
+            return try await listIAPOneTimeCodes(params)
+        case "iap_get_one_time_code":
+            return try await getIAPOneTimeCode(params)
+        case "iap_update_one_time_code":
+            return try await updateIAPOneTimeCode(params)
+        case "iap_deactivate_one_time_code":
+            return try await deactivateIAPOneTimeCode(params)
+        case "iap_get_one_time_code_values":
+            return try await getIAPOneTimeCodeValues(params)
+        case "iap_create_custom_code":
+            return try await createIAPCustomCode(params)
+        case "iap_get_custom_code":
+            return try await getIAPCustomCode(params)
+        case "iap_update_custom_code":
+            return try await updateIAPCustomCode(params)
+        case "iap_deactivate_custom_code":
+            return try await deactivateIAPCustomCode(params)
         default:
             throw MCPError.methodNotFound("Unknown tool: \(params.name)")
         }

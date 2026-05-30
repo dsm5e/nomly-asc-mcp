@@ -29,7 +29,7 @@
 
 ## Overview
 
-**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **348 tools** across 36 worker domains, enabling you to automate your entire iOS/macOS release workflow through natural language.
+**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **389 tools** across 32 worker domains, enabling you to automate your entire iOS/macOS release workflow through natural language.
 
 ### Key capabilities
 
@@ -39,7 +39,7 @@
 - **Build management** — track processing, encryption compliance, readiness checks
 - **Customer reviews** — list, respond, update, delete responses, aggregate statistics
 - **In-app purchases** — CRUD for IAPs, localizations, price points, review screenshots
-- **Subscriptions** — subscription CRUD, groups, localizations, prices, offer codes, win-back offers
+- **Subscriptions** — subscription CRUD, groups, localizations, prices, availability, offer codes, win-back, intro, and promotional offers
 - **Provisioning** — bundle IDs, devices, certificates, profiles, capabilities
 - **Marketing** — screenshots, app previews, custom product pages, A/B testing (PPO), promoted purchases
 - **Accessibility declarations** — manage App Store accessibility support declarations by device family
@@ -363,7 +363,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 }
 ```
 
-> **Note:** Windsurf has a 100-tool limit. The server exposes 348 tools by default, so you must use `--workers` to select a subset. See [Worker Filtering](#worker-filtering) below.
+> **Note:** Windsurf has a 100-tool limit. The server exposes 389 tools by default, so you must use `--workers` to select a subset. See [Worker Filtering](#worker-filtering) below.
 
 </details>
 
@@ -372,7 +372,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ### Worker Filtering
 
-The server exposes **348 tools** across 36 worker domains. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use `--workers` to enable only the workers you need:
+The server exposes **389 tools** across 32 worker domains. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use `--workers` to enable only the workers you need:
 
 ```bash
 # Only load apps, builds, and version lifecycle tools
@@ -382,7 +382,7 @@ asc-mcp --workers apps,builds,versions
 asc-mcp --workers apps,accessibility,builds,versions,reviews,beta_groups,iap
 
 # Monetization focus
-asc-mcp --workers apps,iap,subscriptions,offer_codes,winback,pricing,promoted
+asc-mcp --workers apps,iap,subscriptions,pricing,promoted
 ```
 
 `company` and `auth` workers are **always enabled** regardless of the filter (they provide core multi-account and authentication functionality).
@@ -436,12 +436,8 @@ The generated report records Apple spec metadata, path and operation counts, dom
 | `beta_groups` | `beta_groups_` | 9 | TestFlight groups |
 | `beta_feedback` | `beta_feedback_` | 8 | TestFlight feedback screenshots, crash submissions, crash logs |
 | `beta_testers` | `beta_testers_` | 12 | Tester management |
-| `iap` | `iap_` | 24 | In-app purchases, prices, review screenshots |
-| `subscriptions` | `subscriptions_` | 29 | Subscription CRUD, groups, localizations, prices |
-| `offer_codes` | `offer_codes_` | 10 | Subscription offer codes, one-time codes |
-| `winback` | `winback_` | 5 | Win-back offers for subscriptions |
-| `intro_offers` | `intro_offers_` | 4 | Subscription introductory offers |
-| `promo_offers` | `promo_offers_` | 6 | Subscription promotional offers |
+| `iap` | `iap_` | 46 | In-app purchases, pricing, availability, offer codes, review assets |
+| `subscriptions` | `subscriptions_` | 73 | Subscription lifecycle, pricing, availability, offers, assets |
 | `sandbox` | `sandbox_` | 3 | Sandbox testers |
 | `beta_app` | `beta_app_` | 10 | Beta app localizations and review |
 | `pre_release` | `pre_release_` | 3 | Pre-release versions |
@@ -465,20 +461,20 @@ When connected to an LLM client, tool definitions consume context tokens. Here's
 
 | Configuration | Tools | ~Tokens |
 |---|---:|---:|
-| All workers (default) | 348 | **~39,400** |
+| All workers (default) | 389 | **~44,000** |
 | Release workflow: `apps,builds,versions,reviews` | ~57 | ~7,000 |
-| Monetization: `apps,iap,subscriptions,pricing` | ~78 | ~9,000 |
+| Monetization: `apps,iap,subscriptions,pricing` | ~137 | ~15,500 |
 | TestFlight: `apps,builds,beta_groups,beta_testers` | ~56 | ~6,000 |
 | Marketing: `apps,screenshots,custom_pages,ppo,promoted` | ~60 | ~6,800 |
 | `--workers apps` | 16 | ~2,000 |
 
-**Heaviest workers:** Xcode Cloud (30 tools), Subscriptions (29 tools), InAppPurchases (24 tools), Provisioning (17 tools), Screenshots (16 tools).
+**Heaviest workers:** Subscriptions (73 tools), InAppPurchases (46 tools), Xcode Cloud (30 tools), Provisioning (17 tools), Screenshots (16 tools).
 
-For Claude (200K context) ~39.4K tokens is about 20% of the window. For clients with smaller context windows, use `--workers` to reduce the footprint.
+For Claude (200K context) ~44K tokens is about 22% of the window. For clients with smaller context windows, use `--workers` to reduce the footprint.
 
 ## Available Tools
 
-**348 tools** organized across 36 worker domains (use `--workers` to filter — see [Worker Filtering](#worker-filtering)):
+**389 tools** organized across 32 worker domains (use `--workers` to filter — see [Worker Filtering](#worker-filtering)):
 
 <details>
 <summary><strong>Company Management</strong> — 3 tools</summary>
@@ -713,15 +709,15 @@ Includes tester list/search/get/create/delete, app relationships, invitations, b
 </details>
 
 <details>
-<summary><strong>In-App Purchases</strong> — 24 tools</summary>
+<summary><strong>In-App Purchases</strong> — 46 tools</summary>
 
 | Tool | Description |
 |------|-------------|
 | `iap_list` | List in-app purchases for an app |
 | `iap_get` | Get IAP details |
-| `iap_create` | Create a new IAP (consumable, non-consumable, subscription) |
+| `iap_create` | Create a new IAP |
 | `iap_update` | Update IAP attributes |
-| `iap_delete` | Delete an in-app purchase |
+| `iap_delete` | Delete an IAP |
 | `iap_list_localizations` | List IAP localizations |
 | `iap_create_localization` | Create IAP localization |
 | `iap_update_localization` | Update IAP localization |
@@ -729,112 +725,47 @@ Includes tester list/search/get/create/delete, app relationships, invitations, b
 | `iap_submit_for_review` | Submit IAP for review |
 | `iap_list_subscriptions` | List subscription groups |
 | `iap_get_subscription_group` | Get subscription group details |
-| `iap_list_price_points` | List available price points |
+| `iap_inventory` | AI-friendly IAP inventory for an app |
+| `iap_list_price_points` | List territory-aware price points |
+| `iap_list_price_point_equalizations` | List price point equalizations |
 | `iap_get_price_schedule` | Get price schedule |
 | `iap_set_price_schedule` | Set price schedule |
-| `iap_get_review_screenshot` | Get review screenshot |
+| `iap_pricing_summary` | Summarize current and scheduled prices |
+| `iap_prepare_offer_prices` | Find price point candidates for offers |
 | `iap_set_availability` | Set territory availability |
-| `iap_get_availability` | Get territory availability |
+| `iap_get_availability` | Get availability by IAP or availability ID |
+| `iap_list_available_territories` | List available territories |
+| `iap_get_promoted_purchase` | Get promoted purchase state |
+| `iap_list_offer_codes` | List IAP offer codes |
+| `iap_get_offer_code` | Get an IAP offer code |
+| `iap_create_offer_code` | Create an IAP offer code |
+| `iap_update_offer_code` | Update an IAP offer code |
+| `iap_deactivate_offer_code` | Deactivate an IAP offer code |
+| `iap_list_offer_code_prices` | List territory-aware offer prices |
+| `iap_generate_one_time_codes` | Generate one-time offer codes |
+| `iap_list_one_time_codes` | List one-time code batches |
+| `iap_get_one_time_code` | Get a one-time code batch |
+| `iap_update_one_time_code` | Update a one-time code batch |
+| `iap_deactivate_one_time_code` | Deactivate a one-time code batch |
+| `iap_get_one_time_code_values` | Get generated one-time code values |
+| `iap_create_custom_code` | Create a custom offer code |
+| `iap_get_custom_code` | Get custom code details |
+| `iap_update_custom_code` | Update a custom code |
+| `iap_deactivate_custom_code` | Deactivate a custom code |
+| `iap_get_review_screenshot` | Get review screenshot |
+| `iap_upload_review_screenshot` | Upload review screenshot |
+| `iap_delete_review_screenshot` | Delete review screenshot |
 | `iap_upload_image` | Upload promotional image |
 | `iap_get_image` | Get promotional image |
 | `iap_delete_image` | Delete promotional image |
-| `iap_upload_review_screenshot` | Upload review screenshot |
-| `iap_delete_review_screenshot` | Delete review screenshot |
 | `iap_list_images` | List promotional images |
 
 </details>
 
 <details>
-<summary><strong>Subscriptions</strong> — 29 tools</summary>
+<summary><strong>Subscriptions</strong> — 73 tools</summary>
 
-| Tool | Description |
-|------|-------------|
-| `subscriptions_list` | List subscriptions in a group |
-| `subscriptions_get` | Get subscription details |
-| `subscriptions_create` | Create a new subscription |
-| `subscriptions_update` | Update subscription |
-| `subscriptions_delete` | Delete subscription |
-| `subscriptions_list_localizations` | List subscription localizations |
-| `subscriptions_create_localization` | Create localization |
-| `subscriptions_update_localization` | Update localization |
-| `subscriptions_delete_localization` | Delete localization |
-| `subscriptions_list_prices` | List subscription prices |
-| `subscriptions_list_price_points` | List available price points |
-| `subscriptions_create_group` | Create subscription group |
-| `subscriptions_update_group` | Update subscription group |
-| `subscriptions_delete_group` | Delete subscription group |
-| `subscriptions_list_group_localizations` | List subscription group localizations |
-| `subscriptions_create_group_localization` | Create subscription group localization |
-| `subscriptions_get_group_localization` | Get subscription group localization |
-| `subscriptions_update_group_localization` | Update subscription group localization |
-| `subscriptions_delete_group_localization` | Delete subscription group localization |
-| `subscriptions_delete_price` | Delete subscription price |
-| `subscriptions_submit` | Submit subscription for review |
-| `subscriptions_upload_image` | Upload subscription image |
-| `subscriptions_get_image` | Get subscription image |
-| `subscriptions_delete_image` | Delete subscription image |
-| `subscriptions_upload_review_screenshot` | Upload review screenshot |
-| `subscriptions_get_review_screenshot` | Get review screenshot |
-| `subscriptions_delete_review_screenshot` | Delete review screenshot |
-| `subscriptions_list_images` | List subscription images |
-| `subscriptions_get_review_screenshot_for_subscription` | Get review screenshot for a subscription |
-
-</details>
-
-<details>
-<summary><strong>Offer Codes</strong> — 10 tools</summary>
-
-| Tool | Description |
-|------|-------------|
-| `offer_codes_list` | List offer code configurations |
-| `offer_codes_create` | Create offer code configuration |
-| `offer_codes_update` | Update offer code (enable/disable) |
-| `offer_codes_deactivate` | Deactivate all codes |
-| `offer_codes_list_prices` | List prices for an offer code |
-| `offer_codes_generate_one_time` | Generate one-time use codes (up to 10K) |
-| `offer_codes_list_one_time` | List generated one-time codes |
-| `offer_codes_create_custom_code` | Create a custom offer code |
-| `offer_codes_get_custom_code` | Get custom offer code details |
-| `offer_codes_deactivate_custom_code` | Deactivate a custom offer code |
-
-</details>
-
-<details>
-<summary><strong>Win-Back Offers</strong> — 5 tools</summary>
-
-| Tool | Description |
-|------|-------------|
-| `winback_list` | List win-back offers |
-| `winback_create` | Create a win-back offer |
-| `winback_update` | Update a win-back offer |
-| `winback_delete` | Delete a win-back offer |
-| `winback_list_prices` | List win-back offer prices |
-
-</details>
-
-<details>
-<summary><strong>Introductory Offers</strong> — 4 tools</summary>
-
-| Tool | Description |
-|------|-------------|
-| `intro_offers_list` | List introductory offers for a subscription |
-| `intro_offers_create` | Create an introductory offer |
-| `intro_offers_update` | Update an introductory offer (end date only) |
-| `intro_offers_delete` | Delete an introductory offer |
-
-</details>
-
-<details>
-<summary><strong>Promotional Offers</strong> — 6 tools</summary>
-
-| Tool | Description |
-|------|-------------|
-| `promo_offers_list` | List promotional offers for a subscription |
-| `promo_offers_get` | Get a promotional offer |
-| `promo_offers_create` | Create a promotional offer |
-| `promo_offers_update` | Update promotional offer prices |
-| `promo_offers_delete` | Delete a promotional offer |
-| `promo_offers_list_prices` | List prices for a promotional offer |
+Includes subscription groups, group localizations, subscriptions, subscription localizations, territory-aware prices, price points, price point equalizations, availability, promoted purchase reads, inventory/pricing helpers, intro offers, promotional offers, offer codes, one-time/custom codes, win-back offers, images, and review screenshots. All former public `offer_codes_*`, `intro_offers_*`, `promo_offers_*`, and `winback_*` functionality is exposed through `subscriptions_*`.
 
 </details>
 
@@ -1120,7 +1051,7 @@ Sources/asc-mcp/
 │   ├── HTTPClient.swift            #   Actor-based HTTP with retry logic
 │   ├── JWTService.swift            #   ES256 JWT token generation
 │   └── CompaniesManager.swift      #   Multi-account management
-└── Workers/                        # MCP tool implementations (36 worker domains + MainWorker router)
+└── Workers/                        # MCP tool implementations (32 public worker domains + MainWorker router)
     ├── MainWorker/WorkerManager    #   Central tool registry & routing
     ├── CompaniesWorker/            #   company_* tools
     ├── AuthWorker/                 #   auth_* tools
@@ -1135,10 +1066,6 @@ Sources/asc-mcp/
     ├── BetaTestersWorker/          #   beta_testers_* tools
     ├── InAppPurchasesWorker/       #   iap_* tools
     ├── SubscriptionsWorker/        #   subscriptions_* tools
-    ├── OfferCodesWorker/           #   offer_codes_* tools
-    ├── WinBackOffersWorker/        #   winback_* tools
-    ├── IntroductoryOffersWorker/   #   intro_offers_* tools
-    ├── PromotionalOffersWorker/   #   promo_offers_* tools
     ├── SandboxTestersWorker/      #   sandbox_* tools
     ├── BetaAppWorker/             #   beta_app_* tools
     ├── ProvisioningWorker/         #   provisioning_* tools

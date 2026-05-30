@@ -240,6 +240,14 @@ extension SubscriptionsWorker {
                         "type": .string("string"),
                         "description": .string("Subscription ID")
                     ]),
+                    "territory_id": .object([
+                        "type": .string("string"),
+                        "description": .string("Filter by territory ID (e.g. USA, GBR)")
+                    ]),
+                    "price_point_id": .object([
+                        "type": .string("string"),
+                        "description": .string("Filter by subscription price point ID")
+                    ]),
                     "limit": .object([
                         "type": .string("integer"),
                         "description": .string("Max results (default: 25, max: 200)")
@@ -265,9 +273,13 @@ extension SubscriptionsWorker {
                         "type": .string("string"),
                         "description": .string("Subscription ID")
                     ]),
+                    "territory_id": .object([
+                        "type": .string("string"),
+                        "description": .string("Filter by territory ID (e.g. USA, GBR). Recommended for AI-friendly output.")
+                    ]),
                     "limit": .object([
                         "type": .string("integer"),
-                        "description": .string("Max results (default: 25, max: 200)")
+                        "description": .string("Max results (default: 25, max: 8000)")
                     ]),
                     "next_url": .object([
                         "type": .string("string"),
