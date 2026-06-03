@@ -400,7 +400,7 @@ extension AppsWorker {
                     }
                     selected = match
                 } else {
-                    // Priority: PREPARE_FOR_SUBMISSION > READY_FOR_SALE > first available
+                    // Priority: editable and review-issue states > published > first available
                     // Within each state, prefer platform: IOS > MAC_OS > TV_OS > VISION_OS
                     let platformPriority = ["IOS", "MAC_OS", "TV_OS", "WATCH_OS", "VISION_OS"]
 
@@ -413,16 +413,13 @@ extension AppsWorker {
                         return candidates.first
                     }
 
-                    let editableCandidates = versions.filter { $0.attributes?.appStoreState == "PREPARE_FOR_SUBMISSION" }
-                    let publishedCandidates = versions.filter { $0.attributes?.appStoreState == "READY_FOR_SALE" }
-
-                    if let editable = preferredByPlatform(editableCandidates) {
-                        selected = editable
-                    } else if let published = preferredByPlatform(publishedCandidates) {
-                        selected = published
-                    } else {
-                        selected = versions[0]
-                    }
+                    let statePriority = ["PREPARE_FOR_SUBMISSION", "REJECTED", "METADATA_REJECTED", "READY_FOR_SALE"]
+                    selected = statePriority
+                        .lazy
+                        .compactMap { state in
+                            preferredByPlatform(versions.filter { $0.attributes?.appStoreState == state })
+                        }
+                        .first ?? versions[0]
                 }
 
                 resolvedVersion = (

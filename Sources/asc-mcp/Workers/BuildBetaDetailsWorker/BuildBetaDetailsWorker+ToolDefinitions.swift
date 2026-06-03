@@ -44,7 +44,7 @@ extension BuildBetaDetailsWorker {
                     "external_build_state": .object([
                         "type": .string("string"),
                         "description": .string("External build state"),
-                        "enum": .array([.string("PROCESSING"), .string("PROCESSING_EXCEPTION"), .string("MISSING_EXPORT_COMPLIANCE"), .string("READY_FOR_BETA_SUBMISSION"), .string("IN_BETA_REVIEW"), .string("BETA_APPROVED"), .string("BETA_REJECTED"), .string("IN_BETA_TESTING"), .string("EXPIRED"), .string("READY_FOR_BETA_TESTING"), .string("IN_EXPORT_COMPLIANCE_REVIEW")])
+                        "enum": .array([.string("PROCESSING"), .string("PROCESSING_EXCEPTION"), .string("MISSING_EXPORT_COMPLIANCE"), .string("READY_FOR_BETA_TESTING"), .string("IN_BETA_TESTING"), .string("EXPIRED"), .string("READY_FOR_BETA_SUBMISSION"), .string("IN_EXPORT_COMPLIANCE_REVIEW"), .string("WAITING_FOR_BETA_REVIEW"), .string("IN_BETA_REVIEW"), .string("BETA_REJECTED"), .string("BETA_APPROVED"), .string("NOT_APPLICABLE")])
                     ])
                 ]),
                 "required": .array([.string("beta_detail_id")])

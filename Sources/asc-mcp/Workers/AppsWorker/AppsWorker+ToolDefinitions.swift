@@ -104,7 +104,7 @@ extension AppsWorker {
 
                 Behavior:
                 - Without locale: returns ALL locales in one request
-                - Without version_id: auto-selects version (priority: PREPARE_FOR_SUBMISSION > READY_FOR_SALE)
+                - Without version_id: auto-selects version (priority: PREPARE_FOR_SUBMISSION > REJECTED > METADATA_REJECTED > READY_FOR_SALE)
                 - include_media: false by default, media loaded only on request
                 """,
             inputSchema: .object([
@@ -124,7 +124,7 @@ extension AppsWorker {
                     ]),
                     "version_state": .object([
                         "type": .string("string"),
-                        "description": .string("Version state filter: PREPARE_FOR_SUBMISSION (editable) or READY_FOR_SALE (published)")
+                        "description": .string("Version state filter (for example PREPARE_FOR_SUBMISSION, REJECTED, METADATA_REJECTED, READY_FOR_SALE)")
                     ]),
                     "include_media": .object([
                         "type": .string("boolean"),

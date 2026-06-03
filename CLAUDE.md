@@ -49,20 +49,24 @@ Each company needs: `keyID`, `issuerID`, `privateKeyPath` (path to `.p8` file).
 
 **WorkerManager** (`Workers/MainWorker/WorkerManager.swift`) — central registry, routes tool calls by prefix.
 
-**Workers** (33 workers, 293 tools):
+**Workers** (36 Swift worker classes; 32 `--workers` filter keys; 389 tools):
 
 | Worker | Prefix | Tools | Domain |
 |--------|--------|-------|--------|
 | CompaniesWorker | `company_` | 3 | Multi-account management |
 | AuthWorker | `auth_` | 4 | JWT tokens |
 | AppsWorker | `apps_` | 9 | App listing, metadata, localizations |
+| AccessibilityWorker | `accessibility_` | 6 | App Store accessibility declarations |
+| WebhooksWorker | `webhooks_` | 11 | Webhook notifications, delivery diagnostics, receiver helpers |
+| XcodeCloudWorker | `xcode_cloud_` | 30 | Xcode Cloud products, workflows, builds, artifacts, issues, test results, SCM |
 | BuildsWorker | `builds_` | 4 | Build management |
 | BuildBetaDetailsWorker | `builds_*_beta_` | 11 | TestFlight localizations, notifications, beta groups, individual testers |
 | BuildProcessingWorker | `builds_*_processing_` | 4 | Build states, encryption |
 | AppLifecycleWorker | `app_versions_` | 14 | Versions, submit, release, phased rollout, delete |
 | ReviewsWorker | `reviews_` | 8 | Customer reviews, responses, AI summarizations |
 | BetaGroupsWorker | `beta_groups_` | 9 | TestFlight groups CRUD, testers, builds |
-| InAppPurchasesWorker | `iap_` | 24 | IAP, subscriptions, localizations, prices, screenshots, availability, images |
+| BetaFeedbackWorker | `beta_feedback_` | 8 | TestFlight feedback screenshots, crash submissions, crash logs |
+| InAppPurchasesWorker | `iap_` | 46 | IAP, pricing, availability, offer codes, review assets |
 | ProvisioningWorker | `provisioning_` | 17 | Bundle IDs, devices, certificates, profiles, capabilities |
 | BetaTestersWorker | `beta_testers_` | 12 | Tester management, search, invite, relationships, invitations |
 | AppInfoWorker | `app_info_` | 10 | App info, categories, localizations, EULA |
@@ -70,11 +74,7 @@ Each company needs: `keyID`, `issuerID`, `privateKeyPath` (path to `.p8` file).
 | UsersWorker | `users_` | 10 | Team members, roles, invitations, visible apps |
 | AppEventsWorker | `app_events_` | 9 | In-app events CRUD, localizations |
 | AnalyticsWorker | `analytics_` | 11 | Sales/financial reports, app summary, analytics reports/instances/segments, snapshot status |
-| SubscriptionsWorker | `subscriptions_` | 29 | Subscription CRUD, groups, localizations, prices, submit, group localizations, images, review screenshots |
-| OfferCodesWorker | `offer_codes_` | 10 | Subscription offer codes, one-time codes, custom codes |
-| WinBackOffersWorker | `winback_` | 5 | Win-back offers for subscriptions |
-| IntroductoryOffersWorker | `intro_offers_` | 4 | Introductory offers (free trial, pay-as-you-go, pay-up-front) |
-| PromotionalOffersWorker | `promo_offers_` | 6 | Promotional offers for subscriptions |
+| SubscriptionsWorker | `subscriptions_` | 73 | Subscription lifecycle, pricing, availability, offers, assets; includes offer-code, intro, promotional, and win-back sub-worker behavior |
 | SandboxTestersWorker | `sandbox_` | 3 | Sandbox testers (list, update, clear purchase history) |
 | BetaAppWorker | `beta_app_` | 10 | Beta app localizations, review submissions, review details |
 | PreReleaseVersionsWorker | `pre_release_` | 3 | Pre-release versions (list, get, builds) |

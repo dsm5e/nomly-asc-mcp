@@ -15,7 +15,11 @@ struct READMEWorkerCountsTests {
         #expect(totalTools == 389)
         #expect(snapshots.count == 32)
         #expect(readme.contains("**\(totalTools) tools**"))
-        #expect(readme.contains("32 worker domains"))
+        #expect(readme.contains("30 App Store tool domains + 2 core domains"))
+        #expect(readme.contains("32 `--workers` filter keys"))
+        #expect(readme.contains("36 Swift worker classes"))
+        #expect(!readme.contains("@v2.4.0"))
+        #expect(!readme.contains("builds_wait_for_processing"))
 
         let lines = readme.components(separatedBy: .newlines)
         for snapshot in snapshots {

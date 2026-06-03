@@ -55,6 +55,7 @@ extension AppLifecycleWorker {
                         "items": .object([
                             "type": .string("string"),
                             "enum": .array([
+                                .string("ACCEPTED"),
                                 .string("DEVELOPER_REMOVED_FROM_SALE"),
                                 .string("DEVELOPER_REJECTED"),
                                 .string("IN_REVIEW"),
@@ -72,7 +73,8 @@ extension AppLifecycleWorker {
                                 .string("REMOVED_FROM_SALE"),
                                 .string("WAITING_FOR_EXPORT_COMPLIANCE"),
                                 .string("WAITING_FOR_REVIEW"),
-                                .string("REPLACED_WITH_NEW_VERSION")
+                                .string("REPLACED_WITH_NEW_VERSION"),
+                                .string("NOT_APPLICABLE")
                             ])
                         ]),
                         "description": .string("Filter by version states")
@@ -486,7 +488,7 @@ extension AppLifecycleWorker {
     func deleteVersionTool() -> Tool {
         Tool(
             name: "app_versions_delete",
-            description: "Delete an app store version. Only versions in PREPARE_FOR_SUBMISSION state can be deleted.",
+            description: "Delete an app store version. App Store Connect validates whether the version is currently deletable.",
             inputSchema: .object([
                 "type": .string("object"),
                 "properties": .object([

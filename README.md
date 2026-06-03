@@ -29,7 +29,7 @@
 
 ## Overview
 
-**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **389 tools** across 32 worker domains, enabling you to automate your entire iOS/macOS release workflow through natural language.
+**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **389 tools** across 30 App Store tool domains + 2 core domains, enabling you to automate your entire iOS/macOS release workflow through natural language.
 
 ### Key capabilities
 
@@ -54,7 +54,7 @@
 ```bash
 # 1. Install via Mint
 brew install mint
-mint install zelentsov-dev/asc-mcp@v2.4.0
+mint install zelentsov-dev/asc-mcp@v3.0.2
 
 # 2. Add to Claude Code with env vars (simplest setup)
 claude mcp add asc-mcp \
@@ -86,7 +86,7 @@ Or use a JSON config file — see [Configuration](#configuration) below.
 brew install mint
 
 # Install asc-mcp from GitHub
-mint install zelentsov-dev/asc-mcp@v2.4.0
+mint install zelentsov-dev/asc-mcp@v3.0.2
 
 # Register in Claude Code
 claude mcp add asc-mcp -- ~/.mint/bin/asc-mcp
@@ -97,13 +97,13 @@ To install a specific branch or tag:
 ```bash
 mint install zelentsov-dev/asc-mcp@main      # main branch
 mint install zelentsov-dev/asc-mcp@develop    # develop branch
-mint install zelentsov-dev/asc-mcp@v2.4.0     # specific tag
+mint install zelentsov-dev/asc-mcp@v3.0.2     # specific tag
 ```
 
 To update to the latest version:
 
 ```bash
-mint install zelentsov-dev/asc-mcp@v2.4.0 --force
+mint install zelentsov-dev/asc-mcp@v3.0.2 --force
 ```
 
 ### Option B: Build from Source
@@ -372,7 +372,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ### Worker Filtering
 
-The server exposes **389 tools** across 32 worker domains. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use `--workers` to enable only the workers you need:
+The server exposes **389 tools** across 30 App Store tool domains + 2 core domains. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use the 32 `--workers` filter keys to enable only the workers you need:
 
 ```bash
 # Only load apps, builds, and version lifecycle tools
@@ -470,11 +470,11 @@ When connected to an LLM client, tool definitions consume context tokens. Here's
 
 **Heaviest workers:** Subscriptions (73 tools), InAppPurchases (46 tools), Xcode Cloud (30 tools), Provisioning (17 tools), Screenshots (16 tools).
 
-For Claude (200K context) ~44K tokens is about 22% of the window. For clients with smaller context windows, use `--workers` to reduce the footprint.
+For 200K-context clients, ~44K tokens is about 22% of the window. For clients with smaller context windows, use `--workers` to reduce the footprint.
 
 ## Available Tools
 
-**389 tools** organized across 32 worker domains (use `--workers` to filter — see [Worker Filtering](#worker-filtering)):
+**389 tools** organized across 30 App Store tool domains + 2 core domains (use the 32 `--workers` filter keys — see [Worker Filtering](#worker-filtering)):
 
 <details>
 <summary><strong>Company Management</strong> — 3 tools</summary>
@@ -1051,23 +1051,32 @@ Sources/asc-mcp/
 │   ├── HTTPClient.swift            #   Actor-based HTTP with retry logic
 │   ├── JWTService.swift            #   ES256 JWT token generation
 │   └── CompaniesManager.swift      #   Multi-account management
-└── Workers/                        # MCP tool implementations (32 public worker domains + MainWorker router)
+└── Workers/                        # MCP tool implementations (36 Swift worker classes + MainWorker router)
     ├── MainWorker/WorkerManager    #   Central tool registry & routing
     ├── CompaniesWorker/            #   company_* tools
     ├── AuthWorker/                 #   auth_* tools
     ├── AppsWorker/                 #   apps_* tools
     ├── AccessibilityWorker/        #   accessibility_* tools
+    ├── WebhooksWorker/             #   webhooks_* tools
+    ├── XcodeCloudWorker/           #   xcode_cloud_* tools
     ├── BuildsWorker/               #   builds_* tools
     ├── BuildProcessingWorker/      #   builds_*_processing tools
     ├── BuildBetaDetailsWorker/     #   builds_*_beta_* tools
     ├── AppLifecycleWorker/         #   app_versions_* tools
     ├── ReviewsWorker/              #   reviews_* tools
     ├── BetaGroupsWorker/           #   beta_groups_* tools
+    ├── BetaFeedbackWorker/         #   beta_feedback_* tools
     ├── BetaTestersWorker/          #   beta_testers_* tools
     ├── InAppPurchasesWorker/       #   iap_* tools
     ├── SubscriptionsWorker/        #   subscriptions_* tools
-    ├── SandboxTestersWorker/      #   sandbox_* tools
-    ├── BetaAppWorker/             #   beta_app_* tools
+    ├── OfferCodesWorker/           #   subscriptions offer-code tools
+    ├── IntroductoryOffersWorker/   #   subscriptions intro-offer tools
+    ├── PromotionalOffersWorker/    #   subscriptions promotional-offer tools
+    ├── WinBackOffersWorker/        #   subscriptions win-back tools
+    ├── SandboxTestersWorker/       #   sandbox_* tools
+    ├── BetaAppWorker/              #   beta_app_* tools
+    ├── PreReleaseVersionsWorker/   #   pre_release_* tools
+    ├── BetaLicenseAgreementsWorker/ #  beta_license_* tools
     ├── ProvisioningWorker/         #   provisioning_* tools
     ├── AppInfoWorker/              #   app_info_* tools
     ├── PricingWorker/              #   pricing_* tools
@@ -1078,6 +1087,7 @@ Sources/asc-mcp/
     ├── CustomProductPagesWorker/   #   custom_pages_* tools
     ├── ProductPageOptimizationWorker/ # ppo_* tools
     ├── PromotedPurchasesWorker/    #   promoted_* tools
+    ├── ReviewAttachmentsWorker/    #   review_attachments_* tools
     └── MetricsWorker/              #   metrics_* tools
 ```
 
@@ -1120,7 +1130,7 @@ Sources/asc-mcp/
 <details>
 <summary><strong>Build processing takes too long</strong></summary>
 
-Use `builds_wait_for_processing` with a reasonable timeout (default 1800s). Apple's build processing typically takes 5–30 minutes but can be longer during peak times.
+Use `builds_get_processing_status` to inspect the current processing state and `builds_check_readiness` to verify App Store/TestFlight readiness. Apple's build processing typically takes 5-30 minutes but can be longer during peak times.
 
 </details>
 

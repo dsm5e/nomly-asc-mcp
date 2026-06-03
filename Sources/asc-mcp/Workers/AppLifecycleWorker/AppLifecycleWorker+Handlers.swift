@@ -891,7 +891,7 @@ extension AppLifecycleWorker {
         }
     }
 
-    /// Deletes an app store version (only PREPARE_FOR_SUBMISSION state)
+    /// Deletes an app store version when Apple marks it deletable
     /// - Returns: JSON with success confirmation
     /// - Throws: CallTool.Result with error if version_id missing or API call fails
     func deleteVersion(_ params: CallTool.Parameters) async throws -> CallTool.Result {
