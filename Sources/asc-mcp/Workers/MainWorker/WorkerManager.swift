@@ -54,6 +54,7 @@ public actor WorkerManager {
     private let readOnlyMode: Bool
     private var appsWorker: AppsWorker
     private var accessibilityWorker: AccessibilityWorker
+    private var nominationsWorker: NominationsWorker
     private var webhooksWorker: WebhooksWorker
     private var xcodeCloudWorker: XcodeCloudWorker
     private var buildsWorker: BuildsWorker
@@ -97,6 +98,7 @@ public actor WorkerManager {
 
         self.appsWorker = await AppsWorker(client: dependencies.httpClient)
         self.accessibilityWorker = await AccessibilityWorker(httpClient: dependencies.httpClient)
+        self.nominationsWorker = await NominationsWorker(httpClient: dependencies.httpClient)
         self.webhooksWorker = await WebhooksWorker(httpClient: dependencies.httpClient)
         self.xcodeCloudWorker = await XcodeCloudWorker(httpClient: dependencies.httpClient)
         self.buildsWorker = await BuildsWorker(httpClient: dependencies.httpClient)
@@ -202,6 +204,7 @@ public actor WorkerManager {
             ),
             WorkerDescriptor(key: "apps", enabledKeys: ["apps"], prefixes: ["apps_"], getTools: { await self.getAppsTools() }, handle: { try await self.appsWorker.handleTool($0) }),
             WorkerDescriptor(key: "accessibility", enabledKeys: ["accessibility"], prefixes: ["accessibility_"], getTools: { await self.getAccessibilityTools() }, handle: { try await self.accessibilityWorker.handleTool($0) }),
+            WorkerDescriptor(key: "nominations", enabledKeys: ["nominations"], prefixes: ["nominations_"], getTools: { await self.getNominationsTools() }, handle: { try await self.nominationsWorker.handleTool($0) }),
             WorkerDescriptor(key: "webhooks", enabledKeys: ["webhooks"], prefixes: ["webhooks_"], getTools: { await self.getWebhooksTools() }, handle: { try await self.webhooksWorker.handleTool($0) }),
             WorkerDescriptor(key: "xcode_cloud", enabledKeys: ["xcode_cloud"], prefixes: ["xcode_cloud_"], getTools: { await self.getXcodeCloudTools() }, handle: { try await self.xcodeCloudWorker.handleTool($0) }),
             WorkerDescriptor(
@@ -357,6 +360,7 @@ public actor WorkerManager {
         try await dependencies.updateForCompany(company)
         self.appsWorker = await AppsWorker(client: dependencies.httpClient)
         self.accessibilityWorker = await AccessibilityWorker(httpClient: dependencies.httpClient)
+        self.nominationsWorker = await NominationsWorker(httpClient: dependencies.httpClient)
         self.webhooksWorker = await WebhooksWorker(httpClient: dependencies.httpClient)
         self.xcodeCloudWorker = await XcodeCloudWorker(httpClient: dependencies.httpClient)
         self.buildsWorker = await BuildsWorker(httpClient: dependencies.httpClient)
@@ -439,6 +443,11 @@ public actor WorkerManager {
     /// Get tools from accessibility declarations worker
     private func getAccessibilityTools() async -> [Tool] {
         return await accessibilityWorker.getTools()
+    }
+
+    /// Get tools from nominations worker
+    private func getNominationsTools() async -> [Tool] {
+        return await nominationsWorker.getTools()
     }
 
     /// Get tools from webhooks worker
