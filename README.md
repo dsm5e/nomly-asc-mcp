@@ -11,7 +11,7 @@
   <a href="https://developer.apple.com/macos/"><img src="https://img.shields.io/badge/macOS-14.0+-000000.svg?style=flat&logo=apple&logoColor=white" alt="macOS 14.0+"></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-compatible-4A90D9.svg?style=flat" alt="MCP Compatible"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat" alt="MIT License"></a>
-  <a href="https://github.com/zelentsov-dev/asc-mcp/actions"><img src="https://github.com/zelentsov-dev/asc-mcp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/dsm5e/nomly-asc-mcp/actions"><img src="https://github.com/dsm5e/nomly-asc-mcp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
 <p align="center">
@@ -54,7 +54,7 @@
 ```bash
 # 1. Install via Mint
 brew install mint
-mint install zelentsov-dev/asc-mcp@v3.0.2
+mint install dsm5e/nomly-asc-mcp@v3.1.0
 
 # 2. Add to Claude Code with env vars (simplest setup)
 claude mcp add asc-mcp \
@@ -86,7 +86,7 @@ Or use a JSON config file — see [Configuration](#configuration) below.
 brew install mint
 
 # Install asc-mcp from GitHub
-mint install zelentsov-dev/asc-mcp@v3.0.2
+mint install dsm5e/nomly-asc-mcp@v3.1.0
 
 # Register in Claude Code
 claude mcp add asc-mcp -- ~/.mint/bin/asc-mcp
@@ -95,22 +95,22 @@ claude mcp add asc-mcp -- ~/.mint/bin/asc-mcp
 To install a specific branch or tag:
 
 ```bash
-mint install zelentsov-dev/asc-mcp@main      # main branch
-mint install zelentsov-dev/asc-mcp@develop    # develop branch
-mint install zelentsov-dev/asc-mcp@v3.0.2     # specific tag
+mint install dsm5e/nomly-asc-mcp@main      # main branch
+mint install dsm5e/nomly-asc-mcp@develop    # develop branch
+mint install dsm5e/nomly-asc-mcp@v3.1.0     # specific tag
 ```
 
 To update to the latest version:
 
 ```bash
-mint install zelentsov-dev/asc-mcp@v3.0.2 --force
+mint install dsm5e/nomly-asc-mcp@v3.1.0 --force
 ```
 
 ### Option B: Build from Source
 
 ```bash
-git clone https://github.com/zelentsov-dev/asc-mcp.git
-cd asc-mcp
+git clone https://github.com/dsm5e/nomly-asc-mcp.git
+cd nomly-asc-mcp
 swift build -c release
 
 # Register in Claude Code
