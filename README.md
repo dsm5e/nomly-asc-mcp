@@ -29,7 +29,7 @@
 
 ## Overview
 
-**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **396 tools** across 31 App Store tool domains + 2 core domains, enabling you to automate your entire iOS/macOS release workflow through natural language.
+**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **397 tools** across 31 App Store tool domains + 2 core domains, enabling you to automate your entire iOS/macOS release workflow through natural language.
 
 ### Key capabilities
 
@@ -372,7 +372,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ### Worker Filtering
 
-The server exposes **396 tools** across 31 App Store tool domains + 2 core domains. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use the 33 `--workers` filter keys to enable only the workers you need:
+The server exposes **397 tools** across 31 App Store tool domains + 2 core domains. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use the 33 `--workers` filter keys to enable only the workers you need:
 
 ```bash
 # Only load apps, builds, and version lifecycle tools
@@ -424,7 +424,7 @@ The generated report records Apple spec metadata, path and operation counts, dom
 |--------|--------|-------|-------------|
 | `company` | `company_` | 3 | Multi-account management |
 | `auth` | `auth_` | 4 | JWT token tools |
-| `apps` | `apps_` | 9 | App listing, metadata, localizations |
+| `apps` | `apps_` | 10 | App listing, metadata, localizations |
 | `accessibility` | `accessibility_` | 6 | App Store accessibility declarations |
 | `nominations` | `nominations_` | 5 | App Store editorial featuring nominations |
 | `webhooks` | `webhooks_` | 11 | Webhook notifications, delivery diagnostics, and receiver helpers |
@@ -475,7 +475,7 @@ For 200K-context clients, ~44K tokens is about 22% of the window. For clients wi
 
 ## Available Tools
 
-**396 tools** organized across 31 App Store tool domains + 2 core domains (use the 33 `--workers` filter keys — see [Worker Filtering](#worker-filtering)):
+**397 tools** organized across 31 App Store tool domains + 2 core domains (use the 33 `--workers` filter keys — see [Worker Filtering](#worker-filtering)):
 
 <details>
 <summary><strong>Company Management</strong> — 3 tools</summary>
@@ -501,7 +501,7 @@ For 200K-context clients, ~44K tokens is about 22% of the window. For clients wi
 </details>
 
 <details>
-<summary><strong>Apps Management</strong> — 9 tools</summary>
+<summary><strong>Apps Management</strong> — 10 tools</summary>
 
 | Tool | Description |
 |------|-------------|

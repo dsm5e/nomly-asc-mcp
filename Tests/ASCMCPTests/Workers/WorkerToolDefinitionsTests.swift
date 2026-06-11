@@ -8,12 +8,13 @@ struct WorkerToolDefinitionsTests {
 
     // MARK: - AppsWorker (9 tools)
 
-    @Test("AppsWorker returns 9 tools with correct names")
+    @Test("AppsWorker returns 10 tools with correct names")
     func appsWorkerTools() async throws {
         let client = try await TestFactory.makeHTTPClient()
         let worker = AppsWorker(client: client)
         let tools = await worker.getTools()
-        #expect(tools.count == 9)
+        #expect(tools.count == 10)
+        #expect(Set(tools.map(\.name)).contains("apps_get_full_metadata"))
         let names = Set(tools.map(\.name))
         #expect(names.contains("apps_list"))
         #expect(names.contains("apps_get_details"))
