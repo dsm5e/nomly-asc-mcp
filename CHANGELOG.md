@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-06-11
+
+> dsm5e/nomly-asc-mcp fork — rebased onto upstream zelentsov-dev/asc-mcp v3.0.2 and re-added our App Store Connect API 4.4 features on top of the modernized surface.
+
+### Added
+
+- **NominationsWorker** (`nominations_*`, 5 tools) — App Store editorial featuring nominations: list/get/create/update/delete. Pitch an app for featuring (APP_LAUNCH / APP_ENHANCEMENTS / NEW_CONTENT) with schedule, related apps, in-app events, territories; submit or archive. Backed by `/v1/nominations`.
+- **SubscriptionsWorker** — `subscriptions_create_plan_availability` and `subscriptions_list_plan_availabilities` for per-plan territory availability (planType MONTHLY/UPFRONT) via `/v1/subscriptionPlanAvailabilities` (API 4.4 successor to per-subscription availability).
+- **AppsWorker** — `apps_get_full_metadata`: title/subtitle/keywords for ALL localizations of the latest version in one call (bulk ASO read; auto-selects newest version).
+
+### Notes
+
+- Inherits the full upstream v3.0.2 surface: webhooks, Xcode Cloud, beta feedback, accessibility declarations, OpenAPI coverage tooling, `--read-only` mode, structured output, metadata validation, and the v2.5.0 security/robustness fixes.
+
 ## [2.5.0] - 2026-05-20
 
 ### Fixed
