@@ -713,4 +713,72 @@ extension SubscriptionsWorker {
             ])
         )
     }
+
+    func createPlanAvailabilityTool() -> Tool {
+        return Tool(
+            name: "subscriptions_create_plan_availability",
+            description: "Set per-plan territory availability for a subscription (API 4.4 successor to subscriptions_set_availability). plan_type MONTHLY = standard auto-renewing plan; UPFRONT = prepaid plan. Provide the territory IDs the plan is available in.",
+            inputSchema: .object([
+                "type": .string("object"),
+                "properties": .object([
+                    "subscription_id": .object([
+                        "type": .string("string"),
+                        "description": .string("Subscription ID")
+                    ]),
+                    "plan_type": .object([
+                        "type": .string("string"),
+                        "description": .string("Plan type: MONTHLY (standard auto-renewing) or UPFRONT (prepaid)")
+                    ]),
+                    "territory_ids": .object([
+                        "type": .string("array"),
+                        "items": .object(["type": .string("string")]),
+                        "description": .string("Territory IDs the plan is available in (e.g. USA, GBR). Get IDs from pricing_list_territories.")
+                    ]),
+                    "available_in_new_territories": .object([
+                        "type": .string("boolean"),
+                        "description": .string("Auto-enable in territories Apple adds later (default false)")
+                    ])
+                ]),
+                "required": .array([.string("subscription_id"), .string("plan_type"), .string("territory_ids")])
+            ])
+        )
+    }
+
+    func listPlanAvailabilitiesTool() -> Tool {
+        return Tool(
+            name: "subscriptions_list_plan_availabilities",
+            description: "List per-plan availabilities for a subscription (MONTHLY / UPFRONT), each with its territory set.",
+            inputSchema: .object([
+                "type": .string("object"),
+                "properties": .object([
+                    "subscription_id": .object([
+                        "type": .string("string"),
+                        "description": .string("Subscription ID")
+                    ]),
+                    "limit": .object([
+                        "type": .string("integer"),
+                        "description": .string("Max results (default: 25, max: 200)")
+                    ])
+                ]),
+                "required": .array([.string("subscription_id")])
+            ])
+        )
+    }
+
+    func submitSubscriptionGroupTool() -> Tool {
+        return Tool(
+            name: "subscriptions_submit_group",
+            description: "Submit an entire subscription group for App Store review in one call (all subscriptions in the group). API 4.4 `/v1/subscriptionGroupSubmissions`.",
+            inputSchema: .object([
+                "type": .string("object"),
+                "properties": .object([
+                    "subscription_group_id": .object([
+                        "type": .string("string"),
+                        "description": .string("Subscription group ID to submit")
+                    ])
+                ]),
+                "required": .array([.string("subscription_group_id")])
+            ])
+        )
+    }
 }

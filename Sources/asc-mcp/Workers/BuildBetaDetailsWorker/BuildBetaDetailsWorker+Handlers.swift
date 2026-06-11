@@ -670,7 +670,7 @@ extension BuildBetaDetailsWorker {
         do {
             let body: [String: Any] = [
                 "data": [
-                    "type": "betaBuildNotifications",
+                    "type": "buildBetaNotifications",
                     "relationships": [
                         "build": [
                             "data": [
@@ -684,7 +684,7 @@ extension BuildBetaDetailsWorker {
 
             let bodyData = try JSONSerialization.data(withJSONObject: body, options: [])
             _ = try await httpClient.post(
-                "/v1/betaBuildNotifications",
+                "/v1/buildBetaNotifications",
                 body: bodyData
             )
 

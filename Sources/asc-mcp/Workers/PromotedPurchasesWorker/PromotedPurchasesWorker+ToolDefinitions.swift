@@ -126,7 +126,7 @@ extension PromotedPurchasesWorker {
     func uploadPromotedPurchaseImageTool() -> Tool {
         return Tool(
             name: "promoted_upload_image",
-            description: "Upload a promotional image for a promoted ONE-TIME IAP purchase (full cycle: reserve, upload, commit). NOTE: For SUBSCRIPTIONS use subscriptions_upload_image instead — this tool uses /v1/promotedPurchaseImages which returns 404 for subscriptions. Subscription images use /v1/subscriptionImages and are linked to App Store Promotion automatically.",
+            description: "DEPRECATED / NON-FUNCTIONAL: the promotedPurchaseImages resource was removed from the App Store Connect API (spec 4.4) — this tool always errors. For SUBSCRIPTIONS use subscriptions_upload_image; for one-time IAP promo art, set it in App Store Connect UI.",
             inputSchema: .object([
                 "type": .string("object"),
                 "properties": .object([
@@ -147,7 +147,7 @@ extension PromotedPurchasesWorker {
     func getPromotedPurchaseImageTool() -> Tool {
         return Tool(
             name: "promoted_get_image",
-            description: "Get details of a promoted purchase image",
+            description: "DEPRECATED / NON-FUNCTIONAL: promotedPurchaseImages was removed from the API (spec 4.4). Use subscriptions_get_image for subscription promo art.",
             inputSchema: .object([
                 "type": .string("object"),
                 "properties": .object([
@@ -164,7 +164,7 @@ extension PromotedPurchasesWorker {
     func deletePromotedPurchaseImageTool() -> Tool {
         return Tool(
             name: "promoted_delete_image",
-            description: "Delete a promoted purchase image",
+            description: "DEPRECATED / NON-FUNCTIONAL: promotedPurchaseImages was removed from the API (spec 4.4).",
             inputSchema: .object([
                 "type": .string("object"),
                 "properties": .object([
@@ -181,7 +181,7 @@ extension PromotedPurchasesWorker {
     func getPromotedPurchaseImageForPurchaseTool() -> Tool {
         return Tool(
             name: "promoted_get_image_for_purchase",
-            description: "Get the promotional image for a promoted purchase by promoted purchase ID (singular resource — one per purchase)",
+            description: "DEPRECATED / NON-FUNCTIONAL: promoted purchases expose no image relationship in API 4.4. Use subscriptions_get_image for subscription promo art.",
             inputSchema: .object([
                 "type": .string("object"),
                 "properties": .object([

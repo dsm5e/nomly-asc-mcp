@@ -50,7 +50,7 @@ Each company needs: `keyID`, `privateKeyPath` (or `privateKeyContent`); `issuerI
 
 **WorkerManager** (`Workers/MainWorker/WorkerManager.swift`) — central registry, routes tool calls by prefix.
 
-**Workers** (33 workers, 293 tools):
+**Workers** (35 workers, 306 tools):
 
 | Worker | Prefix | Tools | Domain |
 |--------|--------|-------|--------|
@@ -71,7 +71,7 @@ Each company needs: `keyID`, `privateKeyPath` (or `privateKeyContent`); `issuerI
 | UsersWorker | `users_` | 10 | Team members, roles, invitations, visible apps |
 | AppEventsWorker | `app_events_` | 9 | In-app events CRUD, localizations |
 | AnalyticsWorker | `analytics_` | 11 | Sales/financial reports, app summary, analytics reports/instances/segments, snapshot status |
-| SubscriptionsWorker | `subscriptions_` | 30 | Subscription CRUD, groups, localizations, prices, submit, group localizations, images, review screenshots |
+| SubscriptionsWorker | `subscriptions_` | 33 | Subscription CRUD, groups, localizations, prices, submit, group localizations, images, review screenshots, plan availability (MONTHLY/UPFRONT), group submission |
 | OfferCodesWorker | `offer_codes_` | 10 | Subscription offer codes, one-time codes, custom codes |
 | WinBackOffersWorker | `winback_` | 5 | Win-back offers for subscriptions |
 | IntroductoryOffersWorker | `intro_offers_` | 4 | Introductory offers (free trial, pay-as-you-go, pay-up-front) |
@@ -86,6 +86,8 @@ Each company needs: `keyID`, `privateKeyPath` (or `privateKeyContent`); `issuerI
 | PromotedPurchasesWorker | `promoted_` | 9 | Promoted in-app purchases, images upload |
 | ReviewAttachmentsWorker | `review_attachments_` | 4 | App Store review attachments (upload, get, delete, list) |
 | MetricsWorker | `metrics_` | 4 | Performance/power metrics, diagnostics |
+| NominationsWorker | `nominations_` | 5 | App Store editorial featuring nominations (CRUD, submit, archive) |
+| AccessibilityDeclarationsWorker | `accessibility_` | 5 | Accessibility Nutrition Labels (CRUD + publish, per device family) |
 
 **Services**: HTTPClient (actor, GET/POST/PATCH/PUT/DELETE + retry with 429), JWTService (ES256), CompaniesManager
 

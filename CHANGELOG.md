@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **SubscriptionsWorker** (+3 tools, 30 → 33) — API 4.4 subscription plans & group submission:
+  - `subscriptions_create_plan_availability` / `subscriptions_list_plan_availabilities` — per-plan territory availability (planType MONTHLY/UPFRONT) via `/v1/subscriptionPlanAvailabilities`, the successor to the deprecated `subscriptionAvailabilities` used by `subscriptions_set_availability`.
+  - `subscriptions_submit_group` — submit a whole subscription group for review in one call (`/v1/subscriptionGroupSubmissions`).
+- **AccessibilityDeclarationsWorker** (`accessibility_*`, 5 tools) — Accessibility Nutrition Labels: list (per app)/get/create/update/delete. Declare which accessibility features an app supports per device family (VoiceOver, captions, larger text, reduced motion, sufficient contrast, etc.) and publish them to the App Store product page. Backed by `/v1/accessibilityDeclarations` (ASC API 4.4).
+- **NominationsWorker** (`nominations_*`, 5 tools) — App Store editorial featuring nominations: list/get/create/update/delete. Pitch an app for featuring (APP_LAUNCH / APP_ENHANCEMENTS / NEW_CONTENT) with schedule, related apps, in-app events, territories; submit (`submitted=true`) or archive. Backed by `/v1/nominations` (ASC API 4.4).
+
+### Fixed
+
+- **`builds_send_beta_notification`** — corrected the endpoint and resource type from `betaBuildNotifications` to `buildBetaNotifications` (matches App Store Connect API 4.4). The previous name returned 404, so TestFlight "notify testers" never worked.
+
+### Changed
+
+- **`promoted_upload_image` / `promoted_get_image` / `promoted_delete_image` / `promoted_get_image_for_purchase`** — disabled with an explanatory error. The `promotedPurchaseImages` resource was removed from the App Store Connect API (absent in spec 4.4) and `promotedPurchases` no longer exposes an image relationship. Subscription promo art is handled by `subscriptions_upload_image`/`subscriptions_get_image`; one-time IAP promo art must be set in the App Store Connect UI.
+- **Subscription setup instructions** — step 3c now points to the `subscriptions_set_availability` tool instead of a raw curl call, and notes that the legacy `/v1/subscriptionAvailabilities` endpoint is deprecated in API 4.4 in favor of per-plan `/v1/subscriptionPlanAvailabilities` (planType MONTHLY/UPFRONT).
+
 ## [2.1.0] - 2026-05-01
 
 ### Added

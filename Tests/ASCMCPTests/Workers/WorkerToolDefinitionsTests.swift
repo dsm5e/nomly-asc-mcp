@@ -310,12 +310,12 @@ struct WorkerToolDefinitionsTests {
 
     // MARK: - SubscriptionsWorker (32 tools)
 
-    @Test("SubscriptionsWorker returns 32 tools with correct names")
+    @Test("SubscriptionsWorker returns 35 tools with correct names")
     func subscriptionsWorkerTools() async throws {
         let client = try await TestFactory.makeHTTPClient()
         let worker = SubscriptionsWorker(httpClient: client, uploadService: UploadService())
         let tools = await worker.getTools()
-        #expect(tools.count == 32)
+        #expect(tools.count == 35)
         let names = Set(tools.map(\.name))
         #expect(names.contains("subscriptions_list"))
         #expect(names.contains("subscriptions_get"))
@@ -348,6 +348,9 @@ struct WorkerToolDefinitionsTests {
         #expect(names.contains("subscriptions_delete_review_screenshot"))
         #expect(names.contains("subscriptions_list_images"))
         #expect(names.contains("subscriptions_get_review_screenshot_for_subscription"))
+        #expect(names.contains("subscriptions_create_plan_availability"))
+        #expect(names.contains("subscriptions_list_plan_availabilities"))
+        #expect(names.contains("subscriptions_submit_group"))
     }
 
     // MARK: - OfferCodesWorker (7 tools)
@@ -478,6 +481,38 @@ struct WorkerToolDefinitionsTests {
         #expect(names.contains("beta_license_list"))
         #expect(names.contains("beta_license_get"))
         #expect(names.contains("beta_license_update"))
+    }
+
+    // MARK: - NominationsWorker (5 tools)
+
+    @Test("NominationsWorker returns 5 tools with correct names")
+    func nominationsWorkerTools() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = NominationsWorker(httpClient: client)
+        let tools = await worker.getTools()
+        #expect(tools.count == 5)
+        let names = Set(tools.map(\.name))
+        #expect(names.contains("nominations_list"))
+        #expect(names.contains("nominations_get"))
+        #expect(names.contains("nominations_create"))
+        #expect(names.contains("nominations_update"))
+        #expect(names.contains("nominations_delete"))
+    }
+
+    // MARK: - AccessibilityDeclarationsWorker (5 tools)
+
+    @Test("AccessibilityDeclarationsWorker returns 5 tools with correct names")
+    func accessibilityDeclarationsWorkerTools() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = AccessibilityDeclarationsWorker(httpClient: client)
+        let tools = await worker.getTools()
+        #expect(tools.count == 5)
+        let names = Set(tools.map(\.name))
+        #expect(names.contains("accessibility_list"))
+        #expect(names.contains("accessibility_get"))
+        #expect(names.contains("accessibility_create"))
+        #expect(names.contains("accessibility_update"))
+        #expect(names.contains("accessibility_delete"))
     }
 
     // MARK: - ScreenshotsWorker (20 tools)

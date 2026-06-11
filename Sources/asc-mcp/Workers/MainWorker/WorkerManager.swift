@@ -84,6 +84,8 @@ public actor WorkerManager {
     private let uploadService: UploadService
     private var metricsWorker: MetricsWorker
     private var reviewAttachmentsWorker: ReviewAttachmentsWorker
+    private var nominationsWorker: NominationsWorker
+    private var accessibilityDeclarationsWorker: AccessibilityDeclarationsWorker
 
     /// Direct initialization with dependencies (for testing and flexibility)
     /// - Parameter enabledWorkers: Set of worker names to enable, nil = all
@@ -125,6 +127,8 @@ public actor WorkerManager {
         self.promotedPurchasesWorker = await PromotedPurchasesWorker(httpClient: dependencies.httpClient, uploadService: self.uploadService)
         self.metricsWorker = await MetricsWorker(httpClient: dependencies.httpClient)
         self.reviewAttachmentsWorker = await ReviewAttachmentsWorker(httpClient: dependencies.httpClient, uploadService: self.uploadService)
+        self.nominationsWorker = await NominationsWorker(httpClient: dependencies.httpClient)
+        self.accessibilityDeclarationsWorker = await AccessibilityDeclarationsWorker(httpClient: dependencies.httpClient)
     }
 
     /// Convenience factory method for production use
@@ -261,6 +265,12 @@ public actor WorkerManager {
             }
             if self.isWorkerEnabled("review_attachments") {
                 allTools += await self.getReviewAttachmentsTools()
+            }
+            if self.isWorkerEnabled("nominations") {
+                allTools += await self.getNominationsTools()
+            }
+            if self.isWorkerEnabled("accessibility") {
+                allTools += await self.getAccessibilityDeclarationsTools()
             }
 
             // Annotate tools with maxResultSizeChars for Claude Code
@@ -468,6 +478,16 @@ public actor WorkerManager {
                     return try await self.reviewAttachmentsWorker.handleTool(params)
                 }
 
+                if params.name.hasPrefix("nominations_") {
+                    guard self.isWorkerEnabled("nominations") else { return self.disabledWorkerResult("nominations") }
+                    return try await self.nominationsWorker.handleTool(params)
+                }
+
+                if params.name.hasPrefix("accessibility_") {
+                    guard self.isWorkerEnabled("accessibility") else { return self.disabledWorkerResult("accessibility") }
+                    return try await self.accessibilityDeclarationsWorker.handleTool(params)
+                }
+
                 return CallTool.Result(
                     content: [.text(text: "Error: Unknown tool: \(params.name)", annotations: nil, _meta: nil)],
                     isError: true
@@ -518,6 +538,8 @@ public actor WorkerManager {
         self.promotedPurchasesWorker = await PromotedPurchasesWorker(httpClient: dependencies.httpClient, uploadService: self.uploadService)
         self.metricsWorker = await MetricsWorker(httpClient: dependencies.httpClient)
         self.reviewAttachmentsWorker = await ReviewAttachmentsWorker(httpClient: dependencies.httpClient, uploadService: self.uploadService)
+        self.nominationsWorker = await NominationsWorker(httpClient: dependencies.httpClient)
+        self.accessibilityDeclarationsWorker = await AccessibilityDeclarationsWorker(httpClient: dependencies.httpClient)
 
         print("✅ Workers reinitialized successfully", to: &standardError)
     }
@@ -675,5 +697,13 @@ public actor WorkerManager {
 
     private func getReviewAttachmentsTools() async -> [Tool] {
         return await reviewAttachmentsWorker.getTools()
+    }
+
+    private func getNominationsTools() async -> [Tool] {
+        return await nominationsWorker.getTools()
+    }
+
+    private func getAccessibilityDeclarationsTools() async -> [Tool] {
+        return await accessibilityDeclarationsWorker.getTools()
     }
 }

@@ -46,7 +46,10 @@ public final class SubscriptionsWorker: Sendable {
             listSubscriptionImagesTool(),
             getSubscriptionReviewScreenshotForSubscriptionTool(),
             setSubscriptionAvailabilityTool(),
-            getSubscriptionsOverviewTool()
+            getSubscriptionsOverviewTool(),
+            createPlanAvailabilityTool(),
+            listPlanAvailabilitiesTool(),
+            submitSubscriptionGroupTool()
         ]
     }
 
@@ -117,6 +120,12 @@ public final class SubscriptionsWorker: Sendable {
             return try await setSubscriptionAvailability(params)
         case "subscriptions_get_overview":
             return try await getSubscriptionsOverview(params)
+        case "subscriptions_create_plan_availability":
+            return try await createPlanAvailability(params)
+        case "subscriptions_list_plan_availabilities":
+            return try await listPlanAvailabilities(params)
+        case "subscriptions_submit_group":
+            return try await submitSubscriptionGroup(params)
         default:
             throw MCPError.methodNotFound("Unknown tool: \(params.name)")
         }

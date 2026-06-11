@@ -69,6 +69,8 @@ public func runApplication(enabledWorkers: Set<String>? = nil) async throws {
         - promoted_* -- promoted in-app purchases
         - metrics_* -- performance metrics and diagnostics
         - review_attachments_* -- app store review attachments (upload, get, delete, list)
+        - nominations_* -- App Store editorial featuring nominations (pitch app launch / enhancements / new content)
+        - accessibility_* -- Accessibility Nutrition Labels (declare supported accessibility features per device family)
 
         ## Subscription Setup Workflow (FULL)
         When asked to set up subscriptions for an app, always follow this exact order:
@@ -80,8 +82,11 @@ public func runApplication(enabledWorkers: Set<String>? = nil) async throws {
         5. For each subscription:
            a. subscriptions_create (group_id, name, product_id, period, group_level, review_note)
            b. subscriptions_create_localization (sub_id, locale, display_name, description ≤55 chars)
-           c. Set territory availability via bash curl POST /v1/subscriptionAvailabilities
-              with all 175 territories (GET /v1/territories first to get all IDs)
+           c. subscriptions_set_availability (sub_id) — enables all territories in one call.
+              (Note: backed by the legacy /v1/subscriptionAvailabilities endpoint, which Apple
+              marked deprecated in API 4.4 in favor of per-plan /v1/subscriptionPlanAvailabilities
+              [planType MONTHLY/UPFRONT]. The legacy call still works for whole-subscription
+              availability; per-plan availability is not yet wrapped.)
            d. subscriptions_list_price_points (sub_id, territory=USA) — find price point for desired price
            e. subscriptions_set_price (sub_id, price_point_id)
            f. If free trial needed: intro_offers_create (sub_id, duration, number_of_periods, offer_type=FREE_TRIAL)

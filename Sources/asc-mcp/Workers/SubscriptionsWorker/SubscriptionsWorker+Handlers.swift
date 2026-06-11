@@ -1686,4 +1686,162 @@ extension SubscriptionsWorker {
             )
         }
     }
+
+    // MARK: - Plan Availability (API 4.4)
+
+    /// Creates per-plan territory availability for a subscription (MONTHLY / UPFRONT)
+    /// - Returns: JSON with the created plan availability
+    func createPlanAvailability(_ params: CallTool.Parameters) async throws -> CallTool.Result {
+        guard let arguments = params.arguments,
+              let subscriptionId = arguments["subscription_id"]?.stringValue,
+              let planType = arguments["plan_type"]?.stringValue else {
+            return CallTool.Result(
+                content: [.text("Error: Required parameters: subscription_id, plan_type, territory_ids")],
+                isError: true
+            )
+        }
+
+        let territoryIds = arguments["territory_ids"]?.arrayValue?.compactMap { $0.stringValue } ?? []
+        guard !territoryIds.isEmpty else {
+            return CallTool.Result(
+                content: [.text("Error: 'territory_ids' must contain at least one territory ID")],
+                isError: true
+            )
+        }
+
+        do {
+            let request = CreateSubscriptionPlanAvailabilityRequest(
+                data: CreateSubscriptionPlanAvailabilityRequest.CreateData(
+                    attributes: CreateSubscriptionPlanAvailabilityRequest.Attributes(
+                        planType: planType,
+                        availableInNewTerritories: arguments["available_in_new_territories"]?.boolValue
+                    ),
+                    relationships: CreateSubscriptionPlanAvailabilityRequest.Relationships(
+                        subscription: CreateSubscriptionPlanAvailabilityRequest.SubscriptionRelationship(
+                            data: ASCResourceIdentifier(type: "subscriptions", id: subscriptionId)
+                        ),
+                        availableTerritories: CreateSubscriptionPlanAvailabilityRequest.TerritoriesRelationship(
+                            data: territoryIds.map { ASCResourceIdentifier(type: "territories", id: $0) }
+                        )
+                    )
+                )
+            )
+
+            let response: ASCSubscriptionPlanAvailabilityResponse = try await httpClient.post(
+                "/v1/subscriptionPlanAvailabilities",
+                body: request,
+                as: ASCSubscriptionPlanAvailabilityResponse.self
+            )
+
+            let result: [String: Any] = [
+                "success": true,
+                "plan_availability": formatPlanAvailability(response.data),
+                "territories_count": territoryIds.count
+            ]
+
+            return CallTool.Result(content: [.text(JSONFormatter.formatJSON(result))])
+
+        } catch {
+            return CallTool.Result(
+                content: [.text("Error: Failed to create plan availability: \(error.localizedDescription)")],
+                isError: true
+            )
+        }
+    }
+
+    /// Lists per-plan availabilities for a subscription
+    /// - Returns: JSON array of plan availabilities (MONTHLY / UPFRONT)
+    func listPlanAvailabilities(_ params: CallTool.Parameters) async throws -> CallTool.Result {
+        guard let arguments = params.arguments,
+              let subscriptionId = arguments["subscription_id"]?.stringValue else {
+            return CallTool.Result(
+                content: [.text("Error: Required parameter 'subscription_id' is missing")],
+                isError: true
+            )
+        }
+
+        do {
+            var queryParams: [String: String] = [:]
+            if let limit = arguments["limit"]?.intValue {
+                queryParams["limit"] = String(min(max(limit, 1), 200))
+            } else {
+                queryParams["limit"] = "25"
+            }
+
+            let response: ASCSubscriptionPlanAvailabilitiesResponse = try await httpClient.get(
+                "/v1/subscriptions/\(subscriptionId)/planAvailabilities",
+                parameters: queryParams,
+                as: ASCSubscriptionPlanAvailabilitiesResponse.self
+            )
+
+            let availabilities = response.data.map { formatPlanAvailability($0) }
+
+            let result: [String: Any] = [
+                "success": true,
+                "plan_availabilities": availabilities,
+                "count": availabilities.count
+            ]
+
+            return CallTool.Result(content: [.text(JSONFormatter.formatJSON(result))])
+
+        } catch {
+            return CallTool.Result(
+                content: [.text("Error: Failed to list plan availabilities: \(error.localizedDescription)")],
+                isError: true
+            )
+        }
+    }
+
+    /// Submits an entire subscription group for App Store review
+    /// - Returns: JSON confirmation with submission ID
+    func submitSubscriptionGroup(_ params: CallTool.Parameters) async throws -> CallTool.Result {
+        guard let arguments = params.arguments,
+              let groupId = arguments["subscription_group_id"]?.stringValue else {
+            return CallTool.Result(
+                content: [.text("Error: Required parameter 'subscription_group_id' is missing")],
+                isError: true
+            )
+        }
+
+        do {
+            let request = SubmitSubscriptionGroupRequest(
+                data: SubmitSubscriptionGroupRequest.SubmitData(
+                    relationships: SubmitSubscriptionGroupRequest.Relationships(
+                        subscriptionGroup: SubmitSubscriptionGroupRequest.GroupRelationship(
+                            data: ASCResourceIdentifier(type: "subscriptionGroups", id: groupId)
+                        )
+                    )
+                )
+            )
+
+            let response: ASCSubscriptionGroupSubmissionResponse = try await httpClient.post(
+                "/v1/subscriptionGroupSubmissions",
+                body: request,
+                as: ASCSubscriptionGroupSubmissionResponse.self
+            )
+
+            let result: [String: Any] = [
+                "success": true,
+                "submission_id": response.data.id,
+                "message": "Subscription group '\(groupId)' submitted for review"
+            ]
+
+            return CallTool.Result(content: [.text(JSONFormatter.formatJSON(result))])
+
+        } catch {
+            return CallTool.Result(
+                content: [.text("Error: Failed to submit subscription group: \(error.localizedDescription)")],
+                isError: true
+            )
+        }
+    }
+
+    private func formatPlanAvailability(_ availability: ASCSubscriptionPlanAvailability) -> [String: Any] {
+        return [
+            "id": availability.id,
+            "type": availability.type,
+            "planType": availability.attributes?.planType.jsonSafe ?? NSNull(),
+            "availableInNewTerritories": availability.attributes?.availableInNewTerritories ?? NSNull()
+        ]
+    }
 }

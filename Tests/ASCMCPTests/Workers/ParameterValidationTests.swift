@@ -864,6 +864,35 @@ struct ParameterValidationTests {
         #expect(result.isError == true)
     }
 
+    // MARK: - SubscriptionsWorker (plan availability + group submission, API 4.4)
+
+    @Test("subscriptions_create_plan_availability without required params returns isError")
+    func subscriptionsCreatePlanAvailabilityMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = SubscriptionsWorker(httpClient: client, uploadService: UploadService())
+        let params = CallTool.Parameters(name: "subscriptions_create_plan_availability", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
+    @Test("subscriptions_list_plan_availabilities without subscription_id returns isError")
+    func subscriptionsListPlanAvailabilitiesMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = SubscriptionsWorker(httpClient: client, uploadService: UploadService())
+        let params = CallTool.Parameters(name: "subscriptions_list_plan_availabilities", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
+    @Test("subscriptions_submit_group without subscription_group_id returns isError")
+    func subscriptionsSubmitGroupMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = SubscriptionsWorker(httpClient: client, uploadService: UploadService())
+        let params = CallTool.Parameters(name: "subscriptions_submit_group", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
     // MARK: - SubscriptionsWorker (group localizations)
 
     @Test("subscriptions_list_group_localizations without subscription_group_id returns isError")
@@ -911,6 +940,91 @@ struct ParameterValidationTests {
         let client = try await TestFactory.makeHTTPClient()
         let worker = BetaLicenseAgreementsWorker(httpClient: client)
         let params = CallTool.Parameters(name: "beta_license_update", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
+    // MARK: - NominationsWorker
+
+    @Test("nominations_get without nomination_id returns isError")
+    func nominationsGetMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = NominationsWorker(httpClient: client)
+        let params = CallTool.Parameters(name: "nominations_get", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
+    @Test("nominations_create without required params returns isError")
+    func nominationsCreateMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = NominationsWorker(httpClient: client)
+        let params = CallTool.Parameters(name: "nominations_create", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
+    @Test("nominations_update without nomination_id returns isError")
+    func nominationsUpdateMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = NominationsWorker(httpClient: client)
+        let params = CallTool.Parameters(name: "nominations_update", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
+    @Test("nominations_delete without nomination_id returns isError")
+    func nominationsDeleteMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = NominationsWorker(httpClient: client)
+        let params = CallTool.Parameters(name: "nominations_delete", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
+    // MARK: - AccessibilityDeclarationsWorker
+
+    @Test("accessibility_list without app_id returns isError")
+    func accessibilityListMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = AccessibilityDeclarationsWorker(httpClient: client)
+        let params = CallTool.Parameters(name: "accessibility_list", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
+    @Test("accessibility_get without declaration_id returns isError")
+    func accessibilityGetMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = AccessibilityDeclarationsWorker(httpClient: client)
+        let params = CallTool.Parameters(name: "accessibility_get", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
+    @Test("accessibility_create without required params returns isError")
+    func accessibilityCreateMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = AccessibilityDeclarationsWorker(httpClient: client)
+        let params = CallTool.Parameters(name: "accessibility_create", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
+    @Test("accessibility_update without declaration_id returns isError")
+    func accessibilityUpdateMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = AccessibilityDeclarationsWorker(httpClient: client)
+        let params = CallTool.Parameters(name: "accessibility_update", arguments: nil)
+        let result = try await worker.handleTool(params)
+        #expect(result.isError == true)
+    }
+
+    @Test("accessibility_delete without declaration_id returns isError")
+    func accessibilityDeleteMissing() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = AccessibilityDeclarationsWorker(httpClient: client)
+        let params = CallTool.Parameters(name: "accessibility_delete", arguments: nil)
         let result = try await worker.handleTool(params)
         #expect(result.isError == true)
     }

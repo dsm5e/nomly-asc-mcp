@@ -267,75 +267,20 @@ extension PromotedPurchasesWorker {
                 isError: true
             )
         }
+        _ = (promotedPurchaseId, filePath)
 
-        do {
-            // Step 1: Get file info
-            let fileSize = try await uploadService.fileSize(at: filePath)
-            let fileName = await uploadService.fileName(at: filePath)
-
-            // Step 2: Reserve — POST to create image resource with upload operations
-            let createRequest = CreatePromotedPurchaseImageRequest(
-                data: CreatePromotedPurchaseImageRequest.CreateData(
-                    attributes: CreatePromotedPurchaseImageRequest.Attributes(
-                        fileSize: fileSize,
-                        fileName: fileName
-                    ),
-                    relationships: CreatePromotedPurchaseImageRequest.Relationships(
-                        promotedPurchase: CreatePromotedPurchaseImageRequest.PromotedPurchaseRelationship(
-                            data: ASCResourceIdentifier(type: "promotedPurchases", id: promotedPurchaseId)
-                        )
-                    )
-                )
-            )
-
-            let reserveResponse: ASCPromotedPurchaseImageResponse = try await httpClient.post(
-                "/v1/promotedPurchaseImages",
-                body: createRequest,
-                as: ASCPromotedPurchaseImageResponse.self
-            )
-
-            let imageId = reserveResponse.data.id
-            guard let uploadOperations = reserveResponse.data.attributes?.uploadOperations,
-                  !uploadOperations.isEmpty else {
-                return CallTool.Result(
-                    content: [.text("Error: No upload operations returned for image '\(imageId)'")],
-                    isError: true
-                )
-            }
-
-            // Step 3: Upload file chunks
-            let md5 = try await uploadService.uploadFile(filePath: filePath, uploadOperations: uploadOperations)
-
-            // Step 4: Commit — PATCH with checksum and uploaded=true
-            let commitRequest = CommitPromotedPurchaseImageRequest(
-                data: CommitPromotedPurchaseImageRequest.CommitData(
-                    id: imageId,
-                    attributes: CommitPromotedPurchaseImageRequest.Attributes(
-                        sourceFileChecksum: md5,
-                        uploaded: true
-                    )
-                )
-            )
-
-            let commitResponse: ASCPromotedPurchaseImageResponse = try await httpClient.patch(
-                "/v1/promotedPurchaseImages/\(imageId)",
-                body: commitRequest,
-                as: ASCPromotedPurchaseImageResponse.self
-            )
-
-            let result: [String: Any] = [
-                "success": true,
-                "image": formatPromotedPurchaseImage(commitResponse.data)
-            ]
-
-            return CallTool.Result(content: [.text(JSONFormatter.formatJSON(result))])
-
-        } catch {
-            return CallTool.Result(
-                content: [.text("Error: Failed to upload promoted purchase image: \(error.localizedDescription)")],
-                isError: true
-            )
-        }
+        // The `/v1/promotedPurchaseImages` resource was removed from the App Store Connect
+        // API (absent in spec 4.4) and `promotedPurchases` no longer exposes an image
+        // relationship. Return guidance instead of issuing a request that always 404s.
+        return CallTool.Result(
+            content: [.text("""
+            Error: promoted_upload_image is no longer supported by the App Store Connect API. \
+            The `promotedPurchaseImages` resource was removed (API 4.4). \
+            For SUBSCRIPTIONS use `subscriptions_upload_image` (linked to App Store Promotion automatically). \
+            For one-time IAP promotional artwork, set it manually in App Store Connect.
+            """)],
+            isError: true
+        )
     }
 
     /// Gets details of a promoted purchase image
@@ -349,26 +294,13 @@ extension PromotedPurchasesWorker {
                 isError: true
             )
         }
+        _ = imageId
 
-        do {
-            let response: ASCPromotedPurchaseImageResponse = try await httpClient.get(
-                "/v1/promotedPurchaseImages/\(imageId)",
-                as: ASCPromotedPurchaseImageResponse.self
-            )
-
-            let result: [String: Any] = [
-                "success": true,
-                "image": formatPromotedPurchaseImage(response.data)
-            ]
-
-            return CallTool.Result(content: [.text(JSONFormatter.formatJSON(result))])
-
-        } catch {
-            return CallTool.Result(
-                content: [.text("Error: Failed to get promoted purchase image: \(error.localizedDescription)")],
-                isError: true
-            )
-        }
+        // `promotedPurchaseImages` was removed from the API (spec 4.4). See promoted_upload_image.
+        return CallTool.Result(
+            content: [.text("Error: promoted_get_image is no longer supported — the `promotedPurchaseImages` resource was removed (API 4.4). Subscription promo art lives under `subscriptions_get_image`.")],
+            isError: true
+        )
     }
 
     /// Deletes a promoted purchase image
@@ -382,23 +314,13 @@ extension PromotedPurchasesWorker {
                 isError: true
             )
         }
+        _ = imageId
 
-        do {
-            _ = try await httpClient.delete("/v1/promotedPurchaseImages/\(imageId)")
-
-            let result = [
-                "success": true,
-                "message": "Promoted purchase image '\(imageId)' deleted"
-            ] as [String: Any]
-
-            return CallTool.Result(content: [.text(JSONFormatter.formatJSON(result))])
-
-        } catch {
-            return CallTool.Result(
-                content: [.text("Error: Failed to delete promoted purchase image: \(error.localizedDescription)")],
-                isError: true
-            )
-        }
+        // `promotedPurchaseImages` was removed from the API (spec 4.4). See promoted_upload_image.
+        return CallTool.Result(
+            content: [.text("Error: promoted_delete_image is no longer supported — the `promotedPurchaseImages` resource was removed (API 4.4).")],
+            isError: true
+        )
     }
 
     /// Gets the promotional image for a promoted purchase by parent ID (singular resource)
@@ -412,26 +334,14 @@ extension PromotedPurchasesWorker {
                 isError: true
             )
         }
+        _ = promotedPurchaseId
 
-        do {
-            let response: ASCPromotedPurchaseImageResponse = try await httpClient.get(
-                "/v1/promotedPurchases/\(promotedPurchaseId)/promotionImage",
-                as: ASCPromotedPurchaseImageResponse.self
-            )
-
-            let result: [String: Any] = [
-                "success": true,
-                "image": formatPromotedPurchaseImage(response.data)
-            ]
-
-            return CallTool.Result(content: [.text(JSONFormatter.formatJSON(result))])
-
-        } catch {
-            return CallTool.Result(
-                content: [.text("Error: Failed to get promoted purchase image: \(error.localizedDescription)")],
-                isError: true
-            )
-        }
+        // `promotedPurchases/{id}/promotionImage` no longer exists (spec 4.4 — promotedPurchases
+        // exposes no image relationship). See promoted_upload_image for the supported path.
+        return CallTool.Result(
+            content: [.text("Error: promoted_get_image_for_purchase is no longer supported — promoted purchases expose no image relationship in API 4.4. Subscription promo art lives under `subscriptions_get_image`.")],
+            isError: true
+        )
     }
 
     // MARK: - Formatting

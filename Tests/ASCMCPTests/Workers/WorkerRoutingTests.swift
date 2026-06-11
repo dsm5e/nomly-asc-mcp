@@ -306,6 +306,30 @@ struct WorkerRoutingTests {
         }
     }
 
+    // MARK: - NominationsWorker
+
+    @Test("NominationsWorker throws MCPError.methodNotFound for unknown tool")
+    func nominationsWorkerUnknownTool() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = NominationsWorker(httpClient: client)
+        let params = CallTool.Parameters(name: "nominations_nonexistent", arguments: nil)
+        await #expect(throws: MCPError.self) {
+            _ = try await worker.handleTool(params)
+        }
+    }
+
+    // MARK: - AccessibilityDeclarationsWorker
+
+    @Test("AccessibilityDeclarationsWorker throws MCPError.methodNotFound for unknown tool")
+    func accessibilityDeclarationsWorkerUnknownTool() async throws {
+        let client = try await TestFactory.makeHTTPClient()
+        let worker = AccessibilityDeclarationsWorker(httpClient: client)
+        let params = CallTool.Parameters(name: "accessibility_nonexistent", arguments: nil)
+        await #expect(throws: MCPError.self) {
+            _ = try await worker.handleTool(params)
+        }
+    }
+
     // MARK: - ScreenshotsWorker
 
     @Test("ScreenshotsWorker throws MCPError.methodNotFound for unknown tool")
