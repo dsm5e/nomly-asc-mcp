@@ -435,7 +435,7 @@ struct WorkerToolDefinitionsTests {
         let client = try await TestFactory.makeHTTPClient()
         let worker = SubscriptionsWorker(httpClient: client, uploadService: UploadService())
         let tools = await worker.getTools()
-        #expect(tools.count == 73)
+        #expect(tools.count == 75)
         let names = Set(tools.map(\.name))
         #expect(names.contains("subscriptions_list"))
         #expect(names.contains("subscriptions_get"))

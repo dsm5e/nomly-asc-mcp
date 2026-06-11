@@ -111,6 +111,7 @@ enum TestFactory {
             WorkerToolSnapshot(key: "auth", readmeName: "Authentication", tools: await authWorker.getTools()),
             WorkerToolSnapshot(key: "apps", readmeName: "Apps Management", tools: await AppsWorker(client: client).getTools()),
             WorkerToolSnapshot(key: "accessibility", readmeName: "Accessibility Declarations", tools: await AccessibilityWorker(httpClient: client).getTools()),
+            WorkerToolSnapshot(key: "nominations", readmeName: "App Store Nominations", tools: await NominationsWorker(httpClient: client).getTools()),
             WorkerToolSnapshot(key: "webhooks", readmeName: "Webhook Notifications", tools: await WebhooksWorker(httpClient: client).getTools()),
             WorkerToolSnapshot(key: "xcode_cloud", readmeName: "Xcode Cloud", tools: await XcodeCloudWorker(httpClient: client).getTools()),
             WorkerToolSnapshot(key: "builds", readmeName: "Builds", tools: await BuildsWorker(httpClient: client).getTools()),

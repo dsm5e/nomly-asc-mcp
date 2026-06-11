@@ -29,7 +29,7 @@
 
 ## Overview
 
-**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **389 tools** across 30 App Store tool domains + 2 core domains, enabling you to automate your entire iOS/macOS release workflow through natural language.
+**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **396 tools** across 31 App Store tool domains + 2 core domains, enabling you to automate your entire iOS/macOS release workflow through natural language.
 
 ### Key capabilities
 
@@ -372,7 +372,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ### Worker Filtering
 
-The server exposes **389 tools** across 30 App Store tool domains + 2 core domains. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use the 32 `--workers` filter keys to enable only the workers you need:
+The server exposes **396 tools** across 31 App Store tool domains + 2 core domains. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use the 33 `--workers` filter keys to enable only the workers you need:
 
 ```bash
 # Only load apps, builds, and version lifecycle tools
@@ -426,6 +426,7 @@ The generated report records Apple spec metadata, path and operation counts, dom
 | `auth` | `auth_` | 4 | JWT token tools |
 | `apps` | `apps_` | 9 | App listing, metadata, localizations |
 | `accessibility` | `accessibility_` | 6 | App Store accessibility declarations |
+| `nominations` | `nominations_` | 5 | App Store editorial featuring nominations |
 | `webhooks` | `webhooks_` | 11 | Webhook notifications, delivery diagnostics, and receiver helpers |
 | `xcode_cloud` | `xcode_cloud_` | 30 | Xcode Cloud products, workflows, build runs, artifacts, issues, test results, and SCM |
 | `builds` | `builds_` | 4 | Build management |
@@ -437,7 +438,7 @@ The generated report records Apple spec metadata, path and operation counts, dom
 | `beta_feedback` | `beta_feedback_` | 8 | TestFlight feedback screenshots, crash submissions, crash logs |
 | `beta_testers` | `beta_testers_` | 12 | Tester management |
 | `iap` | `iap_` | 46 | In-app purchases, pricing, availability, offer codes, review assets |
-| `subscriptions` | `subscriptions_` | 73 | Subscription lifecycle, pricing, availability, offers, assets |
+| `subscriptions` | `subscriptions_` | 75 | Subscription lifecycle, pricing, availability, offers, assets |
 | `sandbox` | `sandbox_` | 3 | Sandbox testers |
 | `beta_app` | `beta_app_` | 10 | Beta app localizations and review |
 | `pre_release` | `pre_release_` | 3 | Pre-release versions |
@@ -474,7 +475,7 @@ For 200K-context clients, ~44K tokens is about 22% of the window. For clients wi
 
 ## Available Tools
 
-**389 tools** organized across 30 App Store tool domains + 2 core domains (use the 32 `--workers` filter keys — see [Worker Filtering](#worker-filtering)):
+**396 tools** organized across 31 App Store tool domains + 2 core domains (use the 33 `--workers` filter keys — see [Worker Filtering](#worker-filtering)):
 
 <details>
 <summary><strong>Company Management</strong> — 3 tools</summary>
@@ -527,6 +528,19 @@ For 200K-context clients, ~44K tokens is about 22% of the window. For clients wi
 | `accessibility_update` | Update support flags or publish a declaration |
 | `accessibility_delete` | Delete a declaration |
 | `accessibility_list_relationships` | List declaration relationship IDs for an app |
+
+</details>
+
+<details>
+<summary><strong>App Store Nominations</strong> — 5 tools</summary>
+
+| Tool | Description |
+|------|-------------|
+| `nominations_list` | List App Store editorial featuring nominations |
+| `nominations_get` | Get one nomination by ID |
+| `nominations_create` | Create a nomination (app launch / enhancements / new content) |
+| `nominations_update` | Update, submit, or archive a nomination |
+| `nominations_delete` | Delete a nomination |
 
 </details>
 
@@ -763,9 +777,9 @@ Includes tester list/search/get/create/delete, app relationships, invitations, b
 </details>
 
 <details>
-<summary><strong>Subscriptions</strong> — 73 tools</summary>
+<summary><strong>Subscriptions</strong> — 75 tools</summary>
 
-Includes subscription groups, group localizations, subscriptions, subscription localizations, territory-aware prices, price points, price point equalizations, availability, promoted purchase reads, inventory/pricing helpers, intro offers, promotional offers, offer codes, one-time/custom codes, win-back offers, images, and review screenshots. All former public `offer_codes_*`, `intro_offers_*`, `promo_offers_*`, and `winback_*` functionality is exposed through `subscriptions_*`.
+Includes subscription groups, group localizations, subscriptions, subscription localizations, territory-aware prices, price points, price point equalizations, availability, per-plan availability (MONTHLY/UPFRONT), promoted purchase reads, inventory/pricing helpers, intro offers, promotional offers, offer codes, one-time/custom codes, win-back offers, images, and review screenshots. All former public `offer_codes_*`, `intro_offers_*`, `promo_offers_*`, and `winback_*` functionality is exposed through `subscriptions_*`.
 
 </details>
 
@@ -1051,7 +1065,7 @@ Sources/asc-mcp/
 │   ├── HTTPClient.swift            #   Actor-based HTTP with retry logic
 │   ├── JWTService.swift            #   ES256 JWT token generation
 │   └── CompaniesManager.swift      #   Multi-account management
-└── Workers/                        # MCP tool implementations (36 Swift worker classes + MainWorker router)
+└── Workers/                        # MCP tool implementations (37 Swift worker classes + MainWorker router)
     ├── MainWorker/WorkerManager    #   Central tool registry & routing
     ├── CompaniesWorker/            #   company_* tools
     ├── AuthWorker/                 #   auth_* tools
