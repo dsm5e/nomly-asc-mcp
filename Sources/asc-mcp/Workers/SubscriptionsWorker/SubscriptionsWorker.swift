@@ -44,7 +44,7 @@ public final class SubscriptionsWorker: Sendable {
             deleteSubscriptionReviewScreenshotTool(),
             listSubscriptionImagesTool(),
             getSubscriptionReviewScreenshotForSubscriptionTool()
-        ] + v3CommerceTools()
+        ] + v3CommerceTools() + planAvailabilityTools()
     }
 
     /// Handle tool calls (for WorkerManager routing)
@@ -167,6 +167,10 @@ public final class SubscriptionsWorker: Sendable {
             "subscriptions_delete_winback_offer",
             "subscriptions_list_winback_offer_prices":
             return try await forwardSubscriptionCommerceTool(params)
+        case "subscriptions_create_plan_availability":
+            return try await createPlanAvailability(params)
+        case "subscriptions_list_plan_availabilities":
+            return try await listPlanAvailabilities(params)
         default:
             throw MCPError.methodNotFound("Unknown tool: \(params.name)")
         }
