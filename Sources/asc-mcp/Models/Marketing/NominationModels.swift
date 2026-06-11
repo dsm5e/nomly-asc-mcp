@@ -50,9 +50,15 @@ public struct CreateNominationRequest: Codable, Sendable {
     public let data: CreateData
 
     public struct CreateData: Codable, Sendable {
-        public let type: String = "nominations"
+        public let type: String
         public let attributes: Attributes
         public let relationships: Relationships
+
+        public init(attributes: Attributes, relationships: Relationships) {
+            self.type = "nominations"
+            self.attributes = attributes
+            self.relationships = relationships
+        }
     }
 
     public struct Attributes: Codable, Sendable {
@@ -87,9 +93,15 @@ public struct UpdateNominationRequest: Codable, Sendable {
     public let data: UpdateData
 
     public struct UpdateData: Codable, Sendable {
-        public let type: String = "nominations"
+        public let type: String
         public let id: String
         public let attributes: Attributes
+
+        public init(id: String, attributes: Attributes) {
+            self.type = "nominations"
+            self.id = id
+            self.attributes = attributes
+        }
     }
 
     public struct Attributes: Codable, Sendable {

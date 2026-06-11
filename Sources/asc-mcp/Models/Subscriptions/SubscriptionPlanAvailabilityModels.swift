@@ -36,9 +36,15 @@ public struct CreateSubscriptionPlanAvailabilityRequest: Codable, Sendable {
     public let data: CreateData
 
     public struct CreateData: Codable, Sendable {
-        public let type: String = "subscriptionPlanAvailabilities"
+        public let type: String
         public let attributes: Attributes
         public let relationships: Relationships
+
+        public init(attributes: Attributes, relationships: Relationships) {
+            self.type = "subscriptionPlanAvailabilities"
+            self.attributes = attributes
+            self.relationships = relationships
+        }
     }
 
     public struct Attributes: Codable, Sendable {
