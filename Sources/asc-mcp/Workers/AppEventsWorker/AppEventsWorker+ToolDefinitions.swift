@@ -188,11 +188,11 @@ extension AppEventsWorker {
                     ]),
                     "short_description": .object([
                         "type": .string("string"),
-                        "description": .string("Localized short description (max 120 characters)")
+                        "description": .string("Localized short description (max 50 characters — Apple's enforced limit; INDEXED for search)")
                     ]),
                     "long_description": .object([
                         "type": .string("string"),
-                        "description": .string("Localized long description (max 500 characters)")
+                        "description": .string("Localized long description (max 120 characters — Apple's enforced limit; NOT indexed)")
                     ])
                 ]),
                 "required": .array([.string("event_id"), .string("locale")])
@@ -218,11 +218,11 @@ extension AppEventsWorker {
                     ]),
                     "short_description": .object([
                         "type": .string("string"),
-                        "description": .string("Localized short description (max 120 characters)")
+                        "description": .string("Localized short description (max 50 characters — Apple's enforced limit; INDEXED for search)")
                     ]),
                     "long_description": .object([
                         "type": .string("string"),
-                        "description": .string("Localized long description (max 500 characters)")
+                        "description": .string("Localized long description (max 120 characters — Apple's enforced limit; NOT indexed)")
                     ])
                 ]),
                 "required": .array([.string("localization_id")])
