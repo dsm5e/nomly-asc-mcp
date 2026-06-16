@@ -150,6 +150,225 @@ extension SubscriptionsWorker {
         return try await postResource(endpoint: "/v1/subscriptionPrices", body: body, key: "price")
     }
 
+    /// Sets a subscription's price across ALL territories in one PATCH request,
+    /// equalized from a single base price point (mirrors the ASC UI "set price"
+    /// flow). The base point's equalizations define every territory's price point;
+    /// all of them are applied via the subscription's `prices` relationship using
+    /// inline-created `subscriptionPrices` in the `included` array.
+    /// - Returns: `{ success, subscription_id, territories_priced }`.
+    /// - Throws: ASCError on network/decoding failure.
+    func setSubscriptionPrice(_ params: CallTool.Parameters) async throws -> CallTool.Result {
+        guard let arguments = params.arguments,
+              let subscriptionId = arguments["subscription_id"]?.stringValue,
+              let basePointId = arguments["price_point_id"]?.stringValue else {
+            return MCPResult.error("Required parameters: subscription_id, price_point_id")
+        }
+        let preserve = arguments["preserve_current_price"]?.boolValue ?? false
+        let startDate = arguments["start_date"]?.stringValue
+
+        do {
+            // Collect every equalized territory price point (+ the base point itself,
+            // which the equalizations endpoint excludes).
+            var pointIds: [String] = [basePointId]
+            var seen: Set<String> = [basePointId]
+            let response = try await httpClient.get(
+                "/v1/subscriptionPricePoints/\(basePointId)/equalizations",
+                parameters: ["limit": "8000", "fields[subscriptionPricePoints]": "customerPrice"],
+                as: PassthroughAPIResponse.self
+            )
+            for item in response.data.arrayValue ?? [] {
+                if let id = item.id, seen.insert(id).inserted { pointIds.append(id) }
+            }
+
+            var included: [[String: Any]] = []
+            var refs: [[String: String]] = []
+            for (index, pointId) in pointIds.enumerated() {
+                let lid = "${price-\(index)}"
+                var attributes: [String: Any] = [:]
+                if preserve { attributes["preserveCurrentPrice"] = true }
+                if let startDate { attributes["startDate"] = startDate }
+                var item: [String: Any] = [
+                    "type": "subscriptionPrices",
+                    "id": lid,
+                    "relationships": [
+                        "subscriptionPricePoint": ["data": ["type": "subscriptionPricePoints", "id": pointId]]
+                    ]
+                ]
+                if !attributes.isEmpty { item["attributes"] = attributes }
+                included.append(item)
+                refs.append(["type": "subscriptionPrices", "id": lid])
+            }
+
+            let body: [String: Any] = [
+                "data": [
+                    "type": "subscriptions",
+                    "id": subscriptionId,
+                    "relationships": ["prices": ["data": refs]]
+                ],
+                "included": included
+            ]
+            let data = try JSONSerialization.data(withJSONObject: body)
+            _ = try await httpClient.patch("/v1/subscriptions/\(subscriptionId)", body: data)
+            return MCPResult.jsonObject([
+                "success": true,
+                "subscription_id": subscriptionId,
+                "territories_priced": pointIds.count
+            ])
+        } catch {
+            return MCPResult.error("Failed to set subscription price: \(error.localizedDescription)")
+        }
+    }
+
+    /// Sets an introductory offer across ALL available territories in one PATCH
+    /// request (replaces any existing intro offers). Built for worldwide free
+    /// trials; for paid offer modes pass `base_price_point_id` to equalize the
+    /// offer price per territory.
+    /// - Returns: `{ success, subscription_id, territories_count }`.
+    /// - Throws: ASCError on network/decoding failure.
+    func setSubscriptionIntroOffer(_ params: CallTool.Parameters) async throws -> CallTool.Result {
+        guard let arguments = params.arguments,
+              let subscriptionId = arguments["subscription_id"]?.stringValue,
+              let duration = arguments["duration"]?.stringValue,
+              let offerMode = arguments["offer_mode"]?.stringValue,
+              let numberOfPeriods = arguments["number_of_periods"]?.intValue else {
+            return MCPResult.error("Required parameters: subscription_id, duration, offer_mode, number_of_periods")
+        }
+
+        do {
+            // Clear any pre-existing introductory offers first. A PATCH that sets
+            // the introductoryOffers relationship still validates the new offers'
+            // date ranges against existing ones and 409s on overlap, so we remove
+            // them before recreating across every territory.
+            try await deleteExistingIntroOffers(subscriptionId: subscriptionId)
+
+            // Map each territory to its equalized offer price point (paid modes only).
+            var pricePointByTerritory: [String: String] = [:]
+            if let basePointId = arguments["base_price_point_id"]?.stringValue {
+                let eq = try await httpClient.get(
+                    "/v1/subscriptionPricePoints/\(basePointId)/equalizations",
+                    parameters: ["limit": "8000", "include": "territory", "fields[subscriptionPricePoints]": "territory"],
+                    as: PassthroughAPIResponse.self
+                )
+                if let baseTerritory = try await territoryOfPricePoint(basePointId) {
+                    pricePointByTerritory[baseTerritory] = basePointId
+                }
+                for item in eq.data.arrayValue ?? [] {
+                    if let id = item.id, let terr = item.relationshipId("territory") {
+                        pricePointByTerritory[terr] = id
+                    }
+                }
+            }
+
+            // Enumerate the territories where the subscription is available.
+            let territoryIds = try await availableTerritoryIds(subscriptionId: subscriptionId)
+            guard !territoryIds.isEmpty else {
+                return MCPResult.error("Subscription has no available territories; set availability before intro offers")
+            }
+
+            var included: [[String: Any]] = []
+            var refs: [[String: String]] = []
+            for (index, territoryId) in territoryIds.enumerated() {
+                let lid = "${intro-\(index)}"
+                var relationships: [String: Any] = [
+                    "territory": ["data": ["type": "territories", "id": territoryId]]
+                ]
+                if let pointId = pricePointByTerritory[territoryId] {
+                    relationships["subscriptionPricePoint"] = ["data": ["type": "subscriptionPricePoints", "id": pointId]]
+                }
+                included.append([
+                    "type": "subscriptionIntroductoryOffers",
+                    "id": lid,
+                    "attributes": [
+                        "duration": duration,
+                        "offerMode": offerMode,
+                        "numberOfPeriods": numberOfPeriods
+                    ],
+                    "relationships": relationships
+                ])
+                refs.append(["type": "subscriptionIntroductoryOffers", "id": lid])
+            }
+
+            let body: [String: Any] = [
+                "data": [
+                    "type": "subscriptions",
+                    "id": subscriptionId,
+                    "relationships": ["introductoryOffers": ["data": refs]]
+                ],
+                "included": included
+            ]
+            let data = try JSONSerialization.data(withJSONObject: body)
+            _ = try await httpClient.patch("/v1/subscriptions/\(subscriptionId)", body: data)
+            return MCPResult.jsonObject([
+                "success": true,
+                "subscription_id": subscriptionId,
+                "territories_count": territoryIds.count
+            ])
+        } catch {
+            return MCPResult.error("Failed to set subscription intro offer: \(error.localizedDescription)")
+        }
+    }
+
+    /// Deletes every existing introductory offer on a subscription (paginated),
+    /// so a fresh all-territory offer can be created without date-range overlap.
+    private func deleteExistingIntroOffers(subscriptionId: String) async throws {
+        var ids: [String] = []
+        var path: String? = "/v1/subscriptions/\(subscriptionId)/introductoryOffers"
+        var query: [String: String] = ["limit": "200"]
+        while let current = path {
+            let page = try await httpClient.get(current, parameters: query, as: PassthroughAPIResponse.self)
+            for item in page.data.arrayValue ?? [] {
+                if let id = item.id { ids.append(id) }
+            }
+            if let next = page.links?.objectValue?["next"]?.stringValue,
+               let parsed = await httpClient.parsePaginationUrl(next) {
+                path = parsed.path
+                query = parsed.parameters
+            } else {
+                path = nil
+            }
+        }
+        for id in ids {
+            _ = try await httpClient.delete("/v1/subscriptionIntroductoryOffers/\(id)")
+        }
+    }
+
+    /// Decodes the territory code embedded in a subscription price point id.
+    private func territoryOfPricePoint(_ pricePointId: String) async throws -> String? {
+        let response = try await httpClient.get(
+            "/v1/subscriptionPricePoints/\(pricePointId)",
+            parameters: ["include": "territory", "fields[subscriptionPricePoints]": "territory"],
+            as: PassthroughAPIResponse.self
+        )
+        return response.data.relationshipId("territory")
+    }
+
+    /// Lists every territory id the subscription is available in (paginated).
+    private func availableTerritoryIds(subscriptionId: String) async throws -> [String] {
+        let availability = try await httpClient.get(
+            "/v1/subscriptions/\(subscriptionId)/subscriptionAvailability",
+            parameters: ["fields[subscriptionAvailabilities]": "availableTerritories"],
+            as: PassthroughAPIResponse.self
+        )
+        guard let availabilityId = availability.data.id else { return [] }
+        var ids: [String] = []
+        var path: String? = "/v1/subscriptionAvailabilities/\(availabilityId)/availableTerritories"
+        var query: [String: String] = ["limit": "200", "fields[territories]": "currency"]
+        while let current = path {
+            let page = try await httpClient.get(current, parameters: query, as: PassthroughAPIResponse.self)
+            for item in page.data.arrayValue ?? [] {
+                if let id = item.id { ids.append(id) }
+            }
+            if let next = page.links?.objectValue?["next"]?.stringValue,
+               let parsed = await httpClient.parsePaginationUrl(next) {
+                path = parsed.path
+                query = parsed.parameters
+            } else {
+                path = nil
+            }
+        }
+        return ids
+    }
+
     func getSubscriptionPricePoint(_ params: CallTool.Parameters) async throws -> CallTool.Result {
         guard let pricePointId = params.arguments?["price_point_id"]?.stringValue else {
             return MCPResult.error("Required parameter 'price_point_id' is missing")

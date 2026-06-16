@@ -118,6 +118,10 @@ public final class SubscriptionsWorker: Sendable {
             return try await getSubscriptionLocalization(params)
         case "subscriptions_create_price":
             return try await createSubscriptionPrice(params)
+        case "subscriptions_set_price":
+            return try await setSubscriptionPrice(params)
+        case "subscriptions_set_intro_offer":
+            return try await setSubscriptionIntroOffer(params)
         case "subscriptions_get_price_point":
             return try await getSubscriptionPricePoint(params)
         case "subscriptions_list_price_point_equalizations":

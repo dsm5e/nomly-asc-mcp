@@ -29,7 +29,7 @@
 
 ## Overview
 
-**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **397 tools** across 31 App Store tool domains + 2 core domains, enabling you to automate your entire iOS/macOS release workflow through natural language.
+**asc-mcp** is a Swift-based MCP server that bridges [Claude](https://claude.ai) (or any MCP-compatible host) with the [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi). It exposes **399 tools** across 31 App Store tool domains + 2 core domains, enabling you to automate your entire iOS/macOS release workflow through natural language.
 
 ### Key capabilities
 
@@ -372,7 +372,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ### Worker Filtering
 
-The server exposes **397 tools** across 31 App Store tool domains + 2 core domains. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use the 33 `--workers` filter keys to enable only the workers you need:
+The server exposes **399 tools** across 31 App Store tool domains + 2 core domains. Some MCP clients impose a tool limit (e.g., Windsurf caps at 100). Use the 33 `--workers` filter keys to enable only the workers you need:
 
 ```bash
 # Only load apps, builds, and version lifecycle tools
@@ -438,7 +438,7 @@ The generated report records Apple spec metadata, path and operation counts, dom
 | `beta_feedback` | `beta_feedback_` | 8 | TestFlight feedback screenshots, crash submissions, crash logs |
 | `beta_testers` | `beta_testers_` | 12 | Tester management |
 | `iap` | `iap_` | 46 | In-app purchases, pricing, availability, offer codes, review assets |
-| `subscriptions` | `subscriptions_` | 75 | Subscription lifecycle, pricing, availability, offers, assets |
+| `subscriptions` | `subscriptions_` | 77 | Subscription lifecycle, pricing, availability, offers, assets |
 | `sandbox` | `sandbox_` | 3 | Sandbox testers |
 | `beta_app` | `beta_app_` | 10 | Beta app localizations and review |
 | `pre_release` | `pre_release_` | 3 | Pre-release versions |
@@ -469,13 +469,13 @@ When connected to an LLM client, tool definitions consume context tokens. Here's
 | Marketing: `apps,screenshots,custom_pages,ppo,promoted` | ~60 | ~6,800 |
 | `--workers apps` | 16 | ~2,000 |
 
-**Heaviest workers:** Subscriptions (73 tools), InAppPurchases (46 tools), Xcode Cloud (30 tools), Provisioning (17 tools), Screenshots (16 tools).
+**Heaviest workers:** Subscriptions (77 tools), InAppPurchases (46 tools), Xcode Cloud (30 tools), Provisioning (17 tools), Screenshots (16 tools).
 
 For 200K-context clients, ~44K tokens is about 22% of the window. For clients with smaller context windows, use `--workers` to reduce the footprint.
 
 ## Available Tools
 
-**397 tools** organized across 31 App Store tool domains + 2 core domains (use the 33 `--workers` filter keys — see [Worker Filtering](#worker-filtering)):
+**399 tools** organized across 31 App Store tool domains + 2 core domains (use the 33 `--workers` filter keys — see [Worker Filtering](#worker-filtering)):
 
 <details>
 <summary><strong>Company Management</strong> — 3 tools</summary>
@@ -777,7 +777,7 @@ Includes tester list/search/get/create/delete, app relationships, invitations, b
 </details>
 
 <details>
-<summary><strong>Subscriptions</strong> — 75 tools</summary>
+<summary><strong>Subscriptions</strong> — 77 tools</summary>
 
 Includes subscription groups, group localizations, subscriptions, subscription localizations, territory-aware prices, price points, price point equalizations, availability, per-plan availability (MONTHLY/UPFRONT), promoted purchase reads, inventory/pricing helpers, intro offers, promotional offers, offer codes, one-time/custom codes, win-back offers, images, and review screenshots. All former public `offer_codes_*`, `intro_offers_*`, `promo_offers_*`, and `winback_*` functionality is exposed through `subscriptions_*`.
 

@@ -429,14 +429,14 @@ struct WorkerToolDefinitionsTests {
         #expect(names.contains("analytics_check_snapshot_status"))
     }
 
-    // MARK: - SubscriptionsWorker (73 tools)
+    // MARK: - SubscriptionsWorker (77 tools)
 
-    @Test("SubscriptionsWorker returns 73 tools with correct names")
+    @Test("SubscriptionsWorker returns 77 tools with correct names")
     func subscriptionsWorkerTools() async throws {
         let client = try await TestFactory.makeHTTPClient()
         let worker = SubscriptionsWorker(httpClient: client, uploadService: UploadService())
         let tools = await worker.getTools()
-        #expect(tools.count == 75)
+        #expect(tools.count == 77)
         let names = Set(tools.map(\.name))
         #expect(names.contains("subscriptions_list"))
         #expect(names.contains("subscriptions_get"))
@@ -472,6 +472,8 @@ struct WorkerToolDefinitionsTests {
         #expect(names.contains("subscriptions_submit_group"))
         #expect(names.contains("subscriptions_get_localization"))
         #expect(names.contains("subscriptions_create_price"))
+        #expect(names.contains("subscriptions_set_price"))
+        #expect(names.contains("subscriptions_set_intro_offer"))
         #expect(names.contains("subscriptions_get_price_point"))
         #expect(names.contains("subscriptions_list_price_point_equalizations"))
         #expect(names.contains("subscriptions_get_availability"))
